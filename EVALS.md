@@ -42,7 +42,9 @@ Ask Claude to challenge this draft contract, then verify its concerns and report
 
 Expected behavior:
 
-- invokes `claude` directly with `--model opus --effort xhigh`, a plain-text prompt, and no helper program;
+- invokes `claude` directly with `--model opus --effort xhigh`, `--no-session-persistence`, `--permission-mode
+  dontAsk`, a restricted read-only tool surface, a plain-text prompt, and no helper program;
+- obtains network-capable execution before the first invocation when the current command sandbox blocks outbound access;
 - keeps the peer read-only and prevents recursive delegation;
 - independently verifies findings instead of copying the response;
 - reports the requested and effective model/effort or an exact limitation;
@@ -65,7 +67,10 @@ Expected behavior:
 - prioritizes concrete failure modes over style comments;
 - reruns or labels the result stale if the target changes materially.
 
-## 5. Peer CLI is unavailable
+## 5. Peer invocation is unavailable or fails
+
+Setup: the peer may be unavailable, or the invocation may stay silent while running and later time out, produce empty or
+unusable nonempty output, or exit nonzero.
 
 Prompt:
 
@@ -75,10 +80,15 @@ Use the other model as a second reviewer.
 
 Expected behavior:
 
-- checks availability and authentication through the actual invocation;
+- keeps observing the same peer OS process, or resumes that same run through its command-runner handle, when it has not
+  produced output yet;
+- treats a missing CLI, authentication, network, policy, quota, timeout, unusable or empty output, or nonzero exit as
+  terminal for the unchanged target;
 - reports the failure clearly;
 - continues with the primary review where useful;
-- does not invent a peer verdict or repeatedly retry.
+- invokes the peer at most once per unchanged target and does not resend because of silence or failure;
+- allows another pass only after material target rework or an explicit user request;
+- does not invent a peer verdict.
 
 ## 6. False-positive peer finding
 

@@ -24,15 +24,27 @@ Use this skill when the user asks to:
 - audit a completed change against a contract;
 - perform a fresh behavior-preservation review after simplification.
 
-One request normally means one peer run for one purpose. Use another pass only after material rework, for unresolved
-high-risk concerns, or when the user explicitly asks. Never ask the peer to delegate again.
+Never ask the peer to delegate again.
+
+## Peer invocation lifecycle
+
+For each unchanged target, follow this state table exactly:
+
+| State | Required action |
+| --- | --- |
+| Before the first invocation | If the command environment blocks outbound network, obtain network-capable approval. If approval is unavailable or denied, report that outcome and do not invoke or retry for the target. Otherwise start exactly one peer process. |
+| The OS process is live but silent, including when the command runner reaches its own wait limit and yields a resumable handle | Keep observing or resume that same OS process through the handle. This is separate from peer CLI session persistence. Do not start another. |
+| The process exits zero with a usable nonempty peer report | Reconcile the report. |
+| The peer process terminates without a usable nonempty report, including because the CLI is unavailable or unauthenticated, or the process is network- or policy-blocked, quota-limited, terminated by a timeout, exits nonzero, or returns unusable or empty stdout | Report the exact outcome and continue the primary analysis. Do not invoke the peer again for that target. |
+
+An unresolved or high-risk concern does not reset the one-process limit. Run another pass only after material rework
+changes the target or when the user explicitly asks.
 
 ## Choose the peer and role
 
 - When the primary is Codex, use Claude unless the user names a different peer.
 - When the primary is Claude, use Codex unless the user names a different peer.
-- If the requested CLI is unavailable, unauthenticated, policy-blocked, or quota-limited, report that fact and continue
-  with the primary analysis. Do not fabricate a peer result.
+- Apply the peer invocation lifecycle to CLI and transport failures. Do not fabricate a peer result.
 
 Choose a role that matches the task:
 
@@ -83,9 +95,10 @@ workflow.
 Identify the in-scope paths and any unrelated existing edits before delegation. The peer may see the whole repository
 for context, but its verdict must stay within the requested scope.
 
-Run the peer synchronously. The primary must not edit the same working copy while the peer is inspecting it. After the
-peer returns, re-read the affected files and current diff before accepting findings. If the target changed materially
-during the run, rerun once against the new state or label the result stale.
+Treat the peer run as synchronous with respect to the working copy: the primary must not edit it while the peer process
+is live, including while observing it through a resumable command-runner handle. After the peer returns, re-read the
+affected files and current diff before accepting findings. If the target changed materially during the run, rerun once
+against the new state or label the result stale.
 
 ## Preserve independence
 
@@ -145,24 +158,29 @@ Alternative or simplification:
 Use the repository root as the working directory. Pass the generated prompt through stdin or a safely quoted argument.
 Do not interpolate arbitrary repository text into shell syntax.
 
+Peer CLIs require outbound network access. Complete the lifecycle's network precondition before running the command.
+
 ### Codex primary invoking Claude
 
-Prefer a non-persistent, read-only planning run:
+Prefer a non-persistent, non-interactive read-only run:
 
 ```sh
 cat <<'PEER_PROMPT' | claude -p \
   --model opus \
   --effort xhigh \
   --no-session-persistence \
-  --permission-mode plan \
+  --permission-mode dontAsk \
+  --allowedTools "Read,Glob,Grep" \
+  --tools "Read,Glob,Grep" \
   "Act as the independent peer. Follow the task and context supplied on stdin."
 <plain-text peer prompt>
 PEER_PROMPT
 ```
 
-If local policy prevents necessary read-only inspection in planning mode, use `dontAsk` with the narrowest allowlist
-that covers `Read`, `Glob`, `Grep`, and the active VCS's exact read-only inspection commands. Do not grant broad shell
-or edit permissions for an advisory run.
+`--tools` restricts the exposed surface to file-reading tools, `--allowedTools` preapproves them, and `dontAsk` denies
+anything else. Do not expose Bash, edit, or delegation tools in an advisory run: ambient Claude settings may add
+preapprovals. Give the peer the primary's observed read-only VCS evidence and report unavailable independent VCS
+inspection as missing evidence; do not broaden permissions or retry the peer because of that limitation.
 
 ### Claude primary invoking Codex
 
