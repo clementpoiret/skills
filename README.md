@@ -4,22 +4,24 @@ Composable [Agent Skills](https://agentskills.io/) for safer, easier-to-review s
 [Codex](https://developers.openai.com/codex/) and [Claude Code](https://code.claude.com/docs/en/overview).
 
 This collection helps one primary agent define what must change, consult the other coding agent as an independent
-read-only peer, implement and verify the change, and remove unnecessary complexity only after the checks are green. It
-also includes a comprehensive Jujutsu workflow that activates automatically in `jj` repositories.
+read-only peer, implement and verify the change, and remove unnecessary complexity from production code and tests only
+after the checks are green. It also includes a comprehensive Jujutsu workflow that activates automatically in `jj`
+repositories.
 
 The primary agent always owns the task, edits, verification, and final answer. A peer finding is evidence to check, not
 a vote or an instruction to copy blindly.
 
 ## Included skills
 
-| Skill                                                          | Purpose                                                                                                                                                                                              | Typical prompt                                                                       |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| [`change-contract`](skills/change-contract/SKILL.md)           | Define observable `AC-*` acceptance criteria, preserved `INV-*` invariants, scope, risk, and verification evidence before implementation; or audit a completed change against the accepted contract. | “Define a change contract for this bug. Do not implement it yet.”                    |
-| [`cross-agent`](skills/cross-agent/SKILL.md)                   | Ask Claude from Codex, or Codex from Claude, for an independent challenge, investigation, proposal, review, or audit; then verify and reconcile every material finding.                              | “Ask Claude to audit the current working copy, then reconcile its findings.”         |
-| [`simplify-after-green`](skills/simplify-after-green/SKILL.md) | Remove unnecessary concepts from an already-correct change while preserving behavior, interfaces, security, compatibility, concurrency, performance, and test strength.                              | “The relevant checks are green. Simplify this change without altering its contract.” |
-| [`jujutsu`](skills/jujutsu/SKILL.md)                           | Detect Jujutsu automatically and use safe, noninteractive `jj` workflows for working copies, revisions, bookmarks, tags, remotes, conflicts, workspaces, and recovery.                               | “Show the current status and move this work onto trunk.”                             |
+| Skill                                                                      | Purpose                                                                                                                                                                                              | Typical prompt                                                                                                             |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| [`change-contract`](skills/change-contract/SKILL.md)                       | Define observable `AC-*` acceptance criteria, preserved `INV-*` invariants, scope, risk, and verification evidence before implementation; or audit a completed change against the accepted contract. | “Define a change contract for this bug. Do not implement it yet.”                                                          |
+| [`cross-agent`](skills/cross-agent/SKILL.md)                               | Ask Claude from Codex, or Codex from Claude, for an independent challenge, investigation, proposal, review, or audit; then verify and reconcile every material finding.                              | “Ask Claude to audit the current working copy, then reconcile its findings.”                                               |
+| [`simplify-after-green`](skills/simplify-after-green/SKILL.md)             | Remove unnecessary concepts from an already-correct change while preserving behavior, interfaces, security, compatibility, concurrency, performance, and test strength.                              | “The relevant checks are green. Simplify this change without altering its contract.”                                       |
+| [`simplify-tests-after-green`](skills/simplify-tests-after-green/SKILL.md) | Reduce duplicate, brittle, slow, implementation-coupled, or low-value tests after green while preserving fault detection, behavioral boundaries, isolation, and useful diagnostics.                  | “The focused suite is green. Use simplify-tests-after-green on the tests affected by this change; preserve fault detection.” |
+| [`jujutsu`](skills/jujutsu/SKILL.md)                                       | Detect Jujutsu automatically and use safe, noninteractive `jj` workflows for working copies, revisions, bookmarks, tags, remotes, conflicts, workspaces, and recovery.                               | “Show the current status and move this work onto trunk.”                                                                   |
 
-The first three skills are VCS-agnostic and work with dirty Git or Jujutsu working copies. They do not require a clean
+The first four skills are VCS-agnostic and work with dirty Git or Jujutsu working copies. They do not require a clean
 tree, branch, commit, or pushed remote. In a Jujutsu repository, `jujutsu` supplies the VCS mechanics automatically; in
 a Git-only repository, the host continues with its normal Git workflow.
 
@@ -60,7 +62,7 @@ link_skills() {
   skills_dir="$1"
   mkdir -p "$skills_dir"
 
-  for skill in change-contract cross-agent simplify-after-green jujutsu; do
+  for skill in change-contract cross-agent simplify-after-green simplify-tests-after-green jujutsu; do
     destination="$skills_dir/$skill"
     if [ -e "$destination" ] || [ -L "$destination" ]; then
       printf 'skip %s (already exists)\n' "$destination"
@@ -90,10 +92,13 @@ Official host documentation:
 
 Start the host from a repository and list its skills:
 
-- Codex: run `/skills` and look for `$change-contract`, `$cross-agent`, `$simplify-after-green`, and `$jujutsu`.
-- Claude Code: run `/skills` and look for `/change-contract`, `/cross-agent`, `/simplify-after-green`, and `/jujutsu`.
+- Codex: run `/skills` and look for `$change-contract`, `$cross-agent`, `$simplify-after-green`,
+  `$simplify-tests-after-green`, and `$jujutsu`.
+- Claude Code: run `/skills` and look for `/change-contract`, `/cross-agent`, `/simplify-after-green`,
+  `/simplify-tests-after-green`, and `/jujutsu`.
 
-Both hosts can select a skill automatically from its description. You can also invoke it explicitly:
+Both hosts can select an eligible skill automatically from its description. `simplify-tests-after-green` is
+explicit-invocation only so an agent does not remove tests without a direct request. You can invoke a skill explicitly:
 
 ```text
 # Codex
@@ -128,6 +133,7 @@ Claude contract proposal
     -> Codex reconciliation and fixes
     -> checks again
     -> Codex simplification after green
+    -> Codex test simplification after green, when requested
     -> final checks
 ```
 
@@ -186,6 +192,24 @@ repository checks. A no-change result is valid.
 
 For a high-risk or nontrivial simplification, optionally request a fresh peer review focused on lost invariants, hidden
 consumers, weakened tests, or complexity that was moved instead of removed.
+
+### 5. Simplify affected tests with Codex
+
+When the focused suite is stable and green, explicitly ask Codex to review only the tests created or affected by the
+current work and their nearest related suite:
+
+```text
+The focused suite is green. Use simplify-tests-after-green on the tests created
+or affected by this change. Preserve every behavioral obligation and boundary.
+Remove or merge a test only with discriminating evidence that the surviving
+suite catches the same realistic regression, then rerun the baseline checks.
+```
+
+The skill maps tests to behavioral obligations and boundary-specific faults before changing them. Equal coverage or two
+tests exercising the same feature is not sufficient evidence of duplication: unit, integration, protocol, persistence,
+and end-to-end checks can protect different failure modes. It records a green baseline, requires a surviving test or
+other discriminator for every removal or merge, preserves case-level diagnostics and isolation, and reruns the baseline
+afterward. A `no-change` or candidate-level `blocked` result is valid when redundancy cannot be demonstrated safely.
 
 The same workflow works in reverse with Claude Code as primary: ask it to call Codex for the contract proposal and
 audit, while Claude owns implementation, reconciliation, and simplification.
@@ -263,6 +287,9 @@ and INV-* item with observed evidence.
 
 The focused and broad checks are green. Simplify this change without changing
 its behavior, then ask the other model for a behavior-preservation review.
+
+The focused suite is green. Use simplify-tests-after-green on the tests affected
+by this change. Preserve fault detection and boundary coverage.
 
 Show the current repository status and move this work onto trunk.
 ```
