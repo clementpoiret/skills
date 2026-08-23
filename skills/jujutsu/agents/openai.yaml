@@ -1,0 +1,7 @@
+interface:
+  display_name: "Jujutsu"
+  short_description: "Use safe, noninteractive Jujutsu workflows for version control"
+  default_prompt: "Use $jujutsu to perform the requested version-control operation with safe, noninteractive Jujutsu commands."
+
+policy:
+  allow_implicit_invocation: true

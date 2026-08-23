@@ -1,6 +1,8 @@
 ---
 name: cross-agent
 description: Ask the other local coding agent—Claude from Codex or Codex from Claude—for an independent challenge, investigation, implementation proposal, or code review, then verify and reconcile its findings. Works with dirty Git and Jujutsu working copies; no branch, commit, helper program, or structured payload is required.
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Cross-Agent

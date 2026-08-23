@@ -1,0 +1,7 @@
+interface:
+  display_name: "Change Contract"
+  short_description: "Define or audit acceptance criteria, invariants, scope, risk, and evidence"
+  default_prompt: "Use $change-contract to define or audit a bounded code-change contract with observable acceptance criteria and verification evidence."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Cross-Agent"
+  short_description: "Obtain and reconcile an independent review from Claude or Codex"
+  default_prompt: "Use $cross-agent to obtain an independent read-only peer analysis, then verify and reconcile every material finding."
+
+policy:
+  allow_implicit_invocation: false

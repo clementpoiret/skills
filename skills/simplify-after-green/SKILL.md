@@ -1,6 +1,8 @@
 ---
 name: simplify-after-green
 description: Simplify an already-correct code change after relevant checks are green. Remove unnecessary concepts while preserving accepted behavior, tests, interfaces, security, compatibility, concurrency, performance, and operational properties. Works with dirty Git or Jujutsu working copies; use after implementation and do not add features or redesign the system.
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Simplify After Green

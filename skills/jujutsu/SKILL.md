@@ -2,6 +2,8 @@
 name: jujutsu
 description: '**REQUIRED WHEN JJ IS DETECTED** - Activate automatically before any VCS operation whenever `jj root` succeeds or a `.jj/` directory exists in the current path or an ancestor; do not wait for the user to mention Jujutsu or this skill. Use `jj` for repository mutations. A detached Git HEAD is normal in colocated repositories. Requires Conventional Commits 1.0.0 for every nonempty revision description and includes noninteractive, agent-safe workflows for rewriting, bookmarks, tags, remotes, conflicts, workspaces, and recovery.'
 allowed-tools: Bash(jj *)
+user-invocable: true
+disable-model-invocation: false
 ---
 
 # Jujutsu (`jj`) Version Control System

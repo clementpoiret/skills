@@ -1,6 +1,8 @@
 ---
 name: change-contract
 description: Define or audit a bounded code-change contract with observable acceptance criteria, preserved invariants, risk, scope, and verification evidence. Use before nontrivial implementation or after implementation to check a dirty Git or Jujutsu working copy, named revision, or named paths against an accepted contract. Do not use to implement or simplify code.
+user-invocable: true
+disable-model-invocation: true
 ---
 
 # Change Contract

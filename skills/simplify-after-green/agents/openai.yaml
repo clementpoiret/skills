@@ -1,0 +1,7 @@
+interface:
+  display_name: "Simplify After Green"
+  short_description: "Reduce conceptual complexity after relevant checks are green"
+  default_prompt: "Use $simplify-after-green to remove unnecessary concepts from an already-correct change without altering its accepted behavior."
+
+policy:
+  allow_implicit_invocation: false
