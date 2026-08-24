@@ -1,59 +1,82 @@
 # Software Change Assurance Skills
 
 Composable [Agent Skills](https://agentskills.io/) for safer, easier-to-review software changes in
-[Codex](https://developers.openai.com/codex/) and [Claude Code](https://code.claude.com/docs/en/overview).
+[Codex](https://developers.openai.com/codex/) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code/skills).
 
-This collection helps one primary agent define what must change, consult the other coding agent as an independent
-read-only peer, implement and verify the change, and remove unnecessary complexity from production code and tests only
-after the checks are green. It also includes a comprehensive Jujutsu workflow that activates automatically in `jj`
-repositories.
+The collection provides five focused workflows:
 
-The primary agent always owns the task, edits, verification, and final answer. A peer finding is evidence to check, not
-a vote or an instruction to copy blindly.
+| Skill                                                                      | Purpose                                                                                                                                                                           |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`change-contract`](skills/change-contract/SKILL.md)                       | Define observable `AC-*` acceptance criteria, preserved `INV-*` invariants, scope, risk, and required evidence; or audit a completed target against an already accepted contract. |
+| [`cross-agent`](skills/cross-agent/SKILL.md)                               | Obtain an independent read-only challenge, investigation, proposal, review, or audit from the other local coding-agent CLI, then verify and reconcile each material finding.      |
+| [`simplify-after-green`](skills/simplify-after-green/SKILL.md)             | Remove one unnecessary production-code concept after relevant checks are green while preserving accepted behavior and boundary properties.                                        |
+| [`simplify-tests-after-green`](skills/simplify-tests-after-green/SKILL.md) | Reduce test maintenance or runtime cost after green only when discriminating evidence preserves fault detection and diagnostics.                                                  |
+| [`jujutsu`](skills/jujutsu/SKILL.md)                                       | Detect Jujutsu workspaces and use safe, noninteractive `jj` workflows with progressive disclosure for advanced operations.                                                        |
 
-## Included skills
+The primary agent always owns scope, edits, checks, and the final answer. Peer output is evidence to verify, not a vote
+or an instruction to copy blindly.
 
-| Skill                                                                      | Purpose                                                                                                                                                                                              | Typical prompt                                                                                                             |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| [`change-contract`](skills/change-contract/SKILL.md)                       | Define observable `AC-*` acceptance criteria, preserved `INV-*` invariants, scope, risk, and verification evidence before implementation; or audit a completed change against the accepted contract. | “Define a change contract for this bug. Do not implement it yet.”                                                          |
-| [`cross-agent`](skills/cross-agent/SKILL.md)                               | Ask Claude from Codex, or Codex from Claude, for an independent challenge, investigation, proposal, review, or audit; then verify and reconcile every material finding.                              | “Ask Claude to audit the current working copy, then reconcile its findings.”                                               |
-| [`simplify-after-green`](skills/simplify-after-green/SKILL.md)             | Remove unnecessary concepts from an already-correct change while preserving behavior, interfaces, security, compatibility, concurrency, performance, and test strength.                              | “The relevant checks are green. Simplify this change without altering its contract.”                                       |
-| [`simplify-tests-after-green`](skills/simplify-tests-after-green/SKILL.md) | Reduce duplicate, brittle, slow, implementation-coupled, or low-value tests after green while preserving fault detection, behavioral boundaries, isolation, and useful diagnostics.                  | “The focused suite is green. Use simplify-tests-after-green on the tests affected by this change; preserve fault detection.” |
-| [`jujutsu`](skills/jujutsu/SKILL.md)                                       | Detect Jujutsu automatically and use safe, noninteractive `jj` workflows for working copies, revisions, bookmarks, tags, remotes, conflicts, workspaces, and recovery.                               | “Show the current status and move this work onto trunk.”                                                                   |
+## Invocation policy
 
-The first four skills are VCS-agnostic and work with dirty Git or Jujutsu working copies. They do not require a clean
-tree, branch, commit, or pushed remote. In a Jujutsu repository, `jujutsu` supplies the VCS mechanics automatically; in
-a Git-only repository, the host continues with its normal Git workflow.
+The policy is intentionally conservative. Workflows that can edit code, remove tests, make an external peer call, or
+change the meaning of a review are explicit-only. Jujutsu is eligible for automatic activation because using the wrong
+VCS mutation surface in an active `jj` workspace is itself hazardous.
+
+| Skill                        | Codex                 | Claude Code           |
+| ---------------------------- | --------------------- | --------------------- |
+| `change-contract`            | Explicit only         | Explicit only         |
+| `cross-agent`                | Explicit only         | Explicit only         |
+| `simplify-after-green`       | Explicit only         | Explicit only         |
+| `simplify-tests-after-green` | Explicit only         | Explicit only         |
+| `jujutsu`                    | Automatic or explicit | Automatic or explicit |
+
+Explicit syntax:
+
+```text
+# Codex
+$change-contract Define a contract for making password-reset tokens single-use. Do not implement it.
+
+# Claude Code
+/change-contract Define a contract for making password-reset tokens single-use. Do not implement it.
+```
+
+To compose explicit-only skills, invoke each one in the same user request:
+
+```text
+# Codex: independent contract challenge
+$cross-agent $change-contract Define and independently challenge a contract for making tokens single-use.
+
+# Claude Code: independent preservation review
+/cross-agent /simplify-after-green Simplify the green change and obtain a fresh read-only preservation review.
+```
+
+A loaded `change-contract` or `simplify-after-green` skill does not silently invoke `cross-agent`. This preserves user
+control over network access, quota, provider disclosure, and latency.
 
 ## Requirements
 
-- A local Codex or Claude Code installation for whichever host you use.
-- Both the `codex` and `claude` CLIs, installed, authenticated, and available on `PATH`, to use `cross-agent` in both
-  directions.
+- A local Codex or Claude Code installation for the chosen host.
+- Both `codex` and `claude`, installed, authenticated, and available on `PATH`, to use `cross-agent` in both directions.
 - Git to clone and update this repository.
-- Jujutsu only if you want to use the `jujutsu` skill in `jj` repositories.
+- Jujutsu only for repositories where the `jujutsu` workflow is needed.
+- Python 3.10 or later to run the dependency-free repository validation and evaluation utilities.
 
-`cross-agent` launches the peer CLI in the same repository and execution environment as the primary. Local-only peer
-runs therefore require both CLIs on that machine or container. A cloud agent that cannot access the other CLI will
-report the peer as unavailable and continue with primary analysis; it must not invent a peer verdict.
-
-Peer calls use the authentication, model access, quota, and billing configuration of the invoked CLI. Review your
-repository's data-handling rules before allowing either provider to inspect sensitive code. By default, peer calls use
-frontier models at `xhigh` effort, which can consume more quota and take longer than configured host defaults.
+`cross-agent` launches the peer CLI in the same repository and execution environment as the primary. The peer call uses
+the invoked CLI's authentication, entitlement, quota, billing, and data-handling configuration. The skill preflights the
+installed command surface and does not assume that a moving model alias, reasoning-effort value, or CLI flag is
+available. When a peer cannot run, the primary continues its own analysis and reports the exact limitation; it never
+invents a peer verdict.
 
 ## Installation
 
-### 1. Clone the source once
+### Clone once
 
 ```sh
 skills_checkout="$HOME/.local/share/clementpoiret-skills"
 git clone https://github.com/clementpoiret/skills.git "$skills_checkout"
 ```
 
-The following commands link that checkout rather than copying it, so one update refreshes every installed skill. They
-skip existing destinations instead of overwriting another installation.
-
-### 2. Install for Codex, Claude Code, or both
+### Link into Codex, Claude Code, or both
 
 ```sh
 skills_checkout="$HOME/.local/share/clementpoiret-skills"
@@ -76,40 +99,21 @@ link_skills "$HOME/.agents/skills"  # Codex
 link_skills "$HOME/.claude/skills"  # Claude Code
 ```
 
-Remove the corresponding `link_skills` line for a host you do not use. Codex loads personal skills from
-`~/.agents/skills`; Claude Code loads them from `~/.claude/skills`. Both support symlinked skill directories.
+Remove the line for a host you do not use. For project-scoped installation, use `<project>/.agents/skills` for Codex and
+`<project>/.claude/skills` for Claude Code. Teams can vendor selected skill directories into those paths instead of
+using personal symlinks.
 
-For a project-scoped installation, use `<project>/.agents/skills` for Codex and `<project>/.claude/skills` for Claude
-Code instead. Local symlinks are convenient for one machine; if a team needs the skills automatically in every clone,
-vendor the selected skill directories into those project paths and commit them.
+### Verify discovery
 
-Official host documentation:
+Start the host from a repository and list available skills:
 
-- [Where Codex loads local skills](https://learn.chatgpt.com/docs/build-skills#where-codex-loads-local-skills)
-- [Where Claude Code skills live](https://code.claude.com/docs/en/slash-commands#where-skills-live)
-
-### 3. Verify discovery
-
-Start the host from a repository and list its skills:
-
-- Codex: run `/skills` and look for `$change-contract`, `$cross-agent`, `$simplify-after-green`,
-  `$simplify-tests-after-green`, and `$jujutsu`.
-- Claude Code: run `/skills` and look for `/change-contract`, `/cross-agent`, `/simplify-after-green`,
+- Codex: `/skills`; look for `$change-contract`, `$cross-agent`, `$simplify-after-green`, `$simplify-tests-after-green`,
+  and `$jujutsu`.
+- Claude Code: `/skills`; look for `/change-contract`, `/cross-agent`, `/simplify-after-green`,
   `/simplify-tests-after-green`, and `/jujutsu`.
 
-Both hosts can select an eligible skill automatically from its description. `simplify-tests-after-green` is
-explicit-invocation only so an agent does not remove tests without a direct request. You can invoke a skill explicitly:
-
-```text
-# Codex
-$change-contract Define a contract for making password-reset tokens single-use. Do not implement it.
-
-# Claude Code
-/change-contract Define a contract for making password-reset tokens single-use. Do not implement it.
-```
-
-If a newly created top-level skill directory does not appear, restart the host and check that each installed path
-resolves to a directory containing `SKILL.md`.
+If a linked skill is missing, restart the host and verify that the resolved directory contains `SKILL.md` and, for Codex
+metadata, `agents/openai.yaml`.
 
 ### Update
 
@@ -117,196 +121,139 @@ resolves to a directory containing `SKILL.md`.
 git -C "$HOME/.local/share/clementpoiret-skills" pull --ff-only
 ```
 
-The symlinks continue to point at the updated checkout. Restart a host only if it does not detect the change.
+## Recommended workflow
 
-## End-to-end workflow: Codex primary, Claude peer
+The example below keeps one primary agent responsible throughout. Replace `$...` with `/...` when Claude Code is the
+primary.
 
-Suppose you want to make password-reset tokens single-use. Keep one Codex session as the primary owner so the accepted
-contract and observed evidence remain in context.
+### 1. Define and optionally challenge the contract
 
-```text
-Claude contract proposal
-    -> Codex verification and accepted contract
-    -> Codex implementation
-    -> focused and broad checks
-    -> Claude audit
-    -> Codex reconciliation and fixes
-    -> checks again
-    -> Codex simplification after green
-    -> Codex test simplification after green, when requested
-    -> final checks
-```
-
-### 1. Ask Claude to propose the contract
-
-Tell Codex:
+Primary-only:
 
 ```text
-Act as the primary owner. Ask Claude to define a change contract for making
-password-reset tokens single-use. Keep the peer read-only. Then inspect the
-repository yourself, verify and reconcile the proposal, and return the accepted
-AC-* and INV-* items. Do not implement yet.
+$change-contract Define a change contract for making password-reset tokens single-use. Do not implement it.
 ```
 
-This activates `cross-agent` for the peer call and `change-contract` for the contract semantics. Codex remains
-responsible for checking the proposal against the repository and resolving unsupported assumptions. `cross-agent`
-defaults the Claude peer to the `opus` alias—currently Claude Opus 5—at `xhigh` effort.
-
-`opus` is Claude Code's moving alias for the latest available Opus model. Name a full model ID when you need to pin an
-exact model version instead of following that alias.
-
-### 2. Implement with Codex
-
-After accepting the contract, tell Codex:
+With an independent peer challenge:
 
 ```text
-Implement the accepted contract as the primary agent. Make only the smallest
-complete change, add the required regression evidence, and run the focused
-checks first followed by the repository-required broader checks. Keep unrelated
-working-copy changes out of scope.
+$cross-agent $change-contract Act as the primary owner. Define a change contract for making password-reset tokens
+single-use, ask the peer to challenge omissions and risk, verify the peer's claims, and return the accepted AC-* and
+INV-* items. Do not implement yet.
 ```
 
-### 3. Audit with Claude
-
-Once the implementation checks are green, tell Codex:
+### 2. Implement and verify as the primary
 
 ```text
-Ask Claude to audit the current working copy against the accepted contract. Keep
-the audit read-only. Verify each finding yourself, accept or reject it with
-evidence, apply any accepted fixes, and rerun the affected checks.
+Implement the accepted contract. Make the smallest complete change, add the required regression evidence, run focused
+checks followed by repository-required broader checks, and preserve unrelated working-copy edits.
 ```
 
-The peer inspects the live working copy; you do not need to create a commit or branch first. Codex should report what it
-accepted, rejected, or could not resolve rather than forwarding Claude's answer unchanged.
+### 3. Audit the result
 
-### 4. Simplify with Codex
-
-After the implementation and audit fixes are green, tell Codex:
+Primary-only:
 
 ```text
-The relevant checks are green. Use simplify-after-green on the current change.
-Preserve every accepted AC-* and INV-* item, public interface, and test strength.
-Remove only complete unnecessary concepts, then rerun the baseline and final
-repository checks. A no-change result is valid.
+$change-contract Audit the current working copy against the accepted contract. Grade every AC-* and INV-* item using
+required evidence, observed evidence, and evidence status. Do not edit code.
 ```
 
-For a high-risk or nontrivial simplification, optionally request a fresh peer review focused on lost invariants, hidden
-consumers, weakened tests, or complexity that was moved instead of removed.
-
-### 5. Simplify affected tests with Codex
-
-When the focused suite is stable and green, explicitly ask Codex to review only the tests created or affected by the
-current work and their nearest related suite:
+With an independent peer:
 
 ```text
-The focused suite is green. Use simplify-tests-after-green on the tests created
-or affected by this change. Preserve every behavioral obligation and boundary.
-Remove or merge a test only with discriminating evidence that the surviving
-suite catches the same realistic regression, then rerun the baseline checks.
+$cross-agent $change-contract Audit the current working copy against the accepted contract. Obtain a fresh read-only
+peer audit, verify every material finding, and reconcile accepted, rejected, and unresolved findings.
 ```
 
-The skill maps tests to behavioral obligations and boundary-specific faults before changing them. Equal coverage or two
-tests exercising the same feature is not sufficient evidence of duplication: unit, integration, protocol, persistence,
-and end-to-end checks can protect different failure modes. It records a green baseline, requires a surviving test or
-other discriminator for every removal or merge, preserves case-level diagnostics and isolation, and reruns the baseline
-afterward. A `no-change` or candidate-level `blocked` result is valid when redundancy cannot be demonstrated safely.
+### 4. Simplify production code after green
 
-The same workflow works in reverse with Claude Code as primary: ask it to call Codex for the contract proposal and
-audit, while Claude owns implementation, reconciliation, and simplification.
+```text
+$simplify-after-green The relevant checks are green. Remove at most one unnecessary concept while preserving the
+accepted contract. Re-run the baseline and broader required checks.
+```
 
-## Can the primary choose the peer model and effort?
+Use `$cross-agent $simplify-after-green` only when an independent preservation review is worth its cost and disclosure.
 
-Yes. `cross-agent` now makes the selection explicit on every peer invocation and defaults to:
+### 5. Simplify tests only by explicit request
 
-| Direction      | Default peer model              | Default effort |
-| -------------- | ------------------------------- | -------------- |
-| Codex → Claude | `opus`, currently Claude Opus 5 | `xhigh`        |
-| Claude → Codex | `gpt-5.6-sol`                   | `xhigh`        |
+```text
+$simplify-tests-after-green The focused and broader baselines are green. Review only tests affected by this change.
+Remove or merge a candidate only when a mutation, known-bad replay, or exact static equivalence proves that surviving
+evidence catches the same realistic fault.
+```
 
-You can request a different model or effort in ordinary language. An explicit selection overrides these defaults for
-that peer run, subject to repository policy and availability in the peer CLI.
+A `no-change` result is valid for both simplification skills.
 
-Under the hood, the model selection maps to the peer CLI:
+## Jujutsu behavior
+
+`jujutsu` is the only implicitly invocable skill. Its first operation is `jj root`; the skill stops applying when that
+command fails. In an active workspace it prefers `jj` for mutations, treats detached Git HEAD as normal in colocated
+repositories, and verifies repository state after every mutation.
+
+The main skill remains small. Advanced guidance is loaded only when relevant:
+
+- history and rewrites;
+- conflicts and operation-log recovery;
+- bookmarks, remotes, fetch, push, and tags;
+- workspaces;
+- configuration and external commands through `jj run`;
+- revision-description policy;
+- version compatibility.
+
+Jujutsu does not impose Conventional Commits globally. The skill follows the repository's own revision-description
+policy and uses Conventional Commits only when that policy or the user requires them.
+
+## Validation and evaluation
+
+Run the static and unit checks before publishing changes:
 
 ```sh
-# Codex primary -> Claude peer
-claude -p --model opus --effort xhigh ...
-
-# Claude primary -> Codex peer
-codex exec --model gpt-5.6-sol \
-  -c 'model_reasoning_effort="xhigh"' ...
+python scripts/validate_skills.py
+python -m unittest discover -s tests -v
 ```
 
-The skill adds its read-only, ephemeral, and repository-scoping flags around these options. Use a moving alias such as
-`opus` when you want the newest model available under that alias; use the provider's exact model ID when reproducibility
-matters.
+The validator checks:
 
-Important limitations:
+- required frontmatter and kebab-case names;
+- alignment between Claude `disable-model-invocation` and Codex `allow_implicit_invocation`;
+- a maximum of 500 lines in each main `SKILL.md`;
+- existence and containment of relative Markdown references.
 
-- A native Codex subagent cannot become a Claude model, and a native Claude subagent cannot become a Codex model merely
-  by changing a model name. Cross-provider review works here because `cross-agent` launches the other CLI.
-- The model must be available to the invoked CLI under the active account, plan, organization policy, and provider.
-- Effort levels are model-dependent. An unsupported level may be rejected or reduced by the host, so inspect the peer
-  result and CLI output rather than assuming the request took effect.
-- The skill must report the requested and effective selection, or the exact limitation when the effective selection is
-  not observable. It must not silently downgrade or claim an unverified model.
-- Model and effort overrides apply to that peer run. They do not silently change the primary agent's model.
+`EVALS.md` defines the empirical protocol. `evals/cases.jsonl` contains trigger, near-miss, procedural, and failure
+cases, including dedicated test-simplification cases. Validate the case catalog and recorded runs with:
 
-Codex also supports model and effort defaults or explicit overrides for its own native subagents; see the
-[Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference). Claude Code exposes
-`--model` and `--effort` for a session; see its [CLI reference](https://code.claude.com/docs/en/cli-reference) and
-[model configuration guide](https://code.claude.com/docs/en/model-config#adjust-effort-level).
+```sh
+python scripts/eval_results.py check-cases evals/cases.jsonl
+python scripts/eval_results.py check-results .eval-results/runs.jsonl
+python scripts/eval_results.py summarize .eval-results/runs.jsonl
+```
 
-## Design and safety rules
+Measure skill availability, selection, actual access, downstream success, failure category, tokens, and wall time as
+separate fields. Compare fresh-session `raw` and `skill` arms; do not treat successful invocation as proof of task
+success.
 
-- One primary owns edits and the final decision. The peer is independent and read-only by default.
-- One peer run has one clear role: challenge, investigate, propose, review, or audit.
-- Peer runs are synchronous. The primary does not edit the same working copy while the peer is inspecting it.
-- The default target is the current working copy, including relevant uncommitted and untracked changes.
-- A peer never recursively invokes `cross-agent`, another subagent, or an agent team.
-- Every material peer finding is independently verified against source, callers, tests, and observed command output.
-- Agreement between models is not proof. Repository policy and reproducible evidence remain authoritative.
-- Existing unrelated edits are preserved. The skills do not clean, stash, reset, commit, rewrite history, push, deploy,
-  or perform another external write unless the user separately requests and authorizes it.
-- A writable peer is exceptional: the user must explicitly request it, the scope must be bounded and non-overlapping,
-  and the primary must inspect and verify every resulting change.
-
-## More usage examples
+## Repository layout
 
 ```text
-Define a change contract for this API change before editing code.
-
-Ask Claude to challenge the draft contract for missing compatibility and rollback
-criteria. Verify its concerns and update only the accepted items.
-
-Have Codex independently investigate this race condition and propose
-discriminating checks. Do not edit the working copy.
-
-Audit the current working copy against this accepted contract. Grade every AC-*
-and INV-* item with observed evidence.
-
-The focused and broad checks are green. Simplify this change without changing
-its behavior, then ask the other model for a behavior-preservation review.
-
-The focused suite is green. Use simplify-tests-after-green on the tests affected
-by this change. Preserve fault detection and boundary coverage.
-
-Show the current repository status and move this work onto trunk.
+skills/<name>/SKILL.md              Core instructions loaded when the skill runs
+skills/<name>/agents/openai.yaml    Codex display metadata and invocation policy
+skills/<name>/references/*.md       On-demand detail for larger workflows
+scripts/validate_skills.py          Dependency-free static validator
+scripts/eval_results.py             JSONL case/result validation and summary utility
+evals/cases.jsonl                   Versioned evaluation catalog
+EVALS.md                            Evaluation protocol and result schema
+tests/                              Regression tests for repository contracts
 ```
 
-In the final example, an agent inside a Jujutsu repository should activate `jujutsu` automatically and use `jj`; the
-user should not need to name the VCS or skill.
+## Security and operational notes
 
-## Evaluation and development
-
-The skills are instruction-only: no helper program, request file, branch, or remote service is required. Behavioral
-evaluation cases live in [`EVALS.md`](EVALS.md). Run the relevant cases in both Codex and Claude Code when changing
-skill descriptions, trigger rules, delegation semantics, review targets, safety boundaries, or Jujutsu commands.
-
-Issues and pull requests are welcome at [`github.com/clementpoiret/skills`](https://github.com/clementpoiret/skills).
-Please keep changes small, preserve the cross-host Agent Skills format, and include an eval case for material behavioral
-changes.
+- A dirty working copy is supported; clean status is not a precondition.
+- Never use reset, checkout, or broad history cleanup to make a skill easier to run.
+- `allowed-tools` grants or preapproves matching calls on hosts that support it; it is not a denial boundary. Use host
+  permissions, deny rules, hooks, and sandboxing for enforcement.
+- A required runtime check that was not observed remains missing evidence.
+- Peer review can be unavailable, stale, wrong, or more expensive than primary analysis. The primary must verify it.
 
 ## License
 
-[MIT](LICENSE) © 2026 Clément Poiret.
+[MIT](LICENSE)

@@ -14,20 +14,23 @@ maintenance, not fewer lines.
 
 Before editing:
 
-1. Identify the accepted change contract. Prefer explicit `AC-*` and `INV-*` items; otherwise state the observable
-   behavior and preserved constraints you infer from the task and repository.
-1. Identify the current working-copy scope. A clean tree, branch, commit, or remote is not required. Determine the
-   active VCS; when a Jujutsu workspace is detected, activate the `jujutsu` skill automatically. Keep unrelated edits
-   out of scope.
-1. Run or confirm the most focused relevant checks and record their observed results.
-1. Ensure the baseline is green enough to detect regressions in the candidate area.
+1. Fix the behavioral basis. Prefer accepted `AC-*` and `INV-*` items. For `R0` or `R1`, a concise behavior basis
+   inferred from the approved task and authoritative repository policy is acceptable when it is stated explicitly. For
+   `R2` or `R3`, require an explicit accepted contract; otherwise return `blocked` rather than infer a convenient one
+   from the implementation.
+1. Identify the working-copy scope and unrelated edits. A clean tree, branch, commit, or remote is not required. In a
+   Jujutsu workspace, use the `jujutsu` skill for VCS mechanics.
+1. Run or confirm the most focused relevant checks and record their observed results. Add a broader baseline when shared
+   fixtures, interfaces, generated artifacts, or integration boundaries may be affected.
+1. Require a baseline green enough to detect regressions in the candidate area.
 
-Return `blocked` rather than simplify when the intended behavior is ambiguous, the baseline is failing for a relevant
-reason, or meaningful regression detection is unavailable. Do not hide a functional repair inside simplification.
+Return `blocked` rather than simplify when intended behavior is ambiguous, a relevant baseline is failing, the review
+target cannot be isolated, or meaningful regression detection is unavailable. Do not hide a functional repair inside
+simplification.
 
 ## What to optimize
 
-Prefer removal of a complete unnecessary concept:
+Prefer removal of one complete unnecessary concept:
 
 - proven dead code or state;
 - a forwarding layer that adds no policy, validation, compatibility, observability, lifecycle, or test seam;
@@ -41,25 +44,24 @@ canonicalization, transactions, idempotency, serialization, compatibility, concu
 backpressure, side-effect isolation, platform separation, observability, nondeterministic test seams, or measured
 resource protection.
 
-Reject changes that merely compress syntax, move complexity, introduce cleverness, generalize for hypothetical use, or
-trade explicit behavior for convention.
+Reject changes that merely compress syntax, relocate complexity, introduce cleverness, generalize for hypothetical use,
+or trade explicit behavior for convention.
 
-## Candidate selection
+## Bound the search
 
-Build a short list, normally no more than three candidates. For each candidate, assess:
+Unless the user explicitly requests a broader pass:
 
-- evidence that the concept is unnecessary;
-- conceptual reduction achieved;
-- strength of regression detection;
-- semantic risk;
-- blast radius and hidden consumers.
+1. inspect no more than three plausible candidates;
+1. choose at most one conceptual removal for the pass;
+1. stop exploring once one candidate has strong evidence, meaningful conceptual reduction, low semantic risk, and a
+   bounded blast radius;
+1. return `no-change` rather than spend unbounded time proving weak candidates.
 
-Prefer strong evidence and meaningful conceptual reduction with low semantic risk and blast radius. A simple text search
-is not proof of non-use when reflection, registration, configuration, generated code, plugins, serialization, or
-external consumers are possible.
+For every candidate, assess evidence of non-necessity, conceptual reduction, regression-detection strength, semantic
+risk, blast radius, and hidden consumers. Text search alone is not proof of non-use when reflection, registration,
+configuration, generated code, plugins, serialization, or external consumers are possible.
 
-Choose the smallest complete change. Do not combine unrelated cleanup, dependency upgrades, formatting churn, or
-architectural redesign.
+Do not combine unrelated cleanup, dependency upgrades, formatting churn, or architectural redesign.
 
 ## Equivalence check
 
@@ -75,24 +77,36 @@ Before editing, compare the proposed before-and-after behavior across relevant d
 - latency, throughput, allocation, memory, I/O, and query count on sensitive paths;
 - test assertions, negative controls, generated artifacts, and build outputs.
 
-If equivalence depends on an unsupported assumption, retain the existing design or add the missing evidence before
-simplifying.
+If equivalence depends on an unsupported assumption, retain the design or obtain the missing evidence before editing.
 
 ## Edit and validate
 
 1. Make one reversible conceptual change at a time.
-1. Preserve public names, schemas, behavior, and test strength unless the accepted contract explicitly permits a change.
-1. Run the most focused checks after each batch.
+1. Preserve public names, schemas, behavior, and test strength unless the accepted contract explicitly permits change.
+1. Run the smallest discriminating checks after the edit.
 1. Inspect the current diff for accidental semantic or scope changes.
-1. Revert or revise a batch immediately when equivalence is uncertain or a check regresses.
-1. After all batches, rerun every baseline command and the broader repository-required checks appropriate to the risk.
-1. For security, concurrency, compatibility, migration, or hot-path behavior, rerun the relevant specialized checks; do
-   not infer safety or performance from code shape.
+1. Revert or revise immediately when equivalence is uncertain or a check regresses.
+1. Rerun every baseline command and the broader repository-required checks appropriate to the risk.
+1. For security, concurrency, compatibility, migration, or hot-path behavior, rerun specialized checks; never infer
+   safety or performance from code shape.
 
-For a nontrivial or high-risk simplification, or when the user asks to use both models, invoke `cross-agent` for a fresh
-read-only review. Give the peer the accepted contract, baseline evidence, and current working copy, but not a defense of
-the simplification. Ask specifically for changed behavior, lost invariants, hidden consumers, weakened tests, and
-complexity that was moved rather than removed. Verify every finding before acting.
+## Optional independent preservation review
+
+This skill does not invoke `cross-agent` itself. `cross-agent` is deliberately explicit-only. For a nontrivial or
+high-risk pass, or when the user wants both models, load both skills explicitly:
+
+```text
+# Codex
+$cross-agent $simplify-after-green <task>
+
+# Claude Code
+/cross-agent /simplify-after-green <task>
+```
+
+When both are active, give the peer the accepted contract, baseline evidence, and current target without defending the
+simplification. Ask for changed behavior, lost invariants, hidden consumers, weakened tests, and complexity that was
+moved rather than removed. Verify every finding before acting. If the user asks for a peer without explicitly loading
+`$cross-agent` or `/cross-agent`, continue the primary-only pass and report that no independent peer review was run.
 
 ## Stop conditions
 
@@ -111,12 +125,13 @@ Return `no-change` or `blocked` when:
 ```text
 Status: simplified | no-change | blocked
 Scope: <paths, symbols, or current diff reviewed>
-Behavior contract: <AC/INV items or concise equivalent>
+Risk and contract basis: <R0-R3; AC/INV items or concise accepted basis>
 Baseline: <commands and observed results>
-Simplifications:
+Candidates considered: <up to three, with disposition>
+Simplification:
 - <concept removed and why it was unnecessary>
 Behavior-preservation evidence:
-- <tests, static evidence, contract checks, benchmark, or peer review>
+- <tests, static evidence, contract checks, benchmark, or explicit peer review>
 Final validation: <commands and observed results>
 Residual risk or unverified areas: <none or exact limitation>
 ```

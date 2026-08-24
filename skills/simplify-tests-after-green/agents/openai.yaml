@@ -1,7 +1,7 @@
 interface:
   display_name: "Simplify Tests After Green"
-  short_description: "Reduce test-suite cost without weakening fault detection"
-  default_prompt: "Use $simplify-tests-after-green to refactor a green test suite while preserving regression strength."
+  short_description: "Reduce green-suite cost only with fault-detection evidence"
+  default_prompt: "Use $simplify-tests-after-green to reduce a green test suite's cost only when discriminating evidence preserves its obligations and diagnostics."
 
 policy:
   allow_implicit_invocation: false
