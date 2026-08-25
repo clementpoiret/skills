@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Dependency-free static validation for this Agent Skills repository."""
+"""Dependency-free structural validation for this Agent Skills repository."""
 
 from __future__ import annotations
 
 import argparse
 import re
+import stat
 import sys
 from pathlib import Path
 from typing import NamedTuple
@@ -12,9 +13,19 @@ from urllib.parse import unquote
 
 
 MAX_SKILL_LINES = 500
+MAX_NAME_CHARS = 64
 MAX_DESCRIPTION_CHARS = 1024
+MAX_COMPATIBILITY_CHARS = 500
+MAX_INITIAL_DESCRIPTION_CHARS = 8000
+MAX_OPENAI_SHORT_DESCRIPTION_CHARS = 100
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+REQUIRED_BODY_HEADING = "## Do not use when"
+REQUIRED_METADATA = {
+    "assurance-validation-status",
+    "assurance-eval-catalog",
+}
+VALIDATION_STATUSES = {"unvalidated-candidate", "candidate", "validated"}
 
 
 class Issue(NamedTuple):
@@ -39,21 +50,26 @@ def parse_bool(value: str) -> bool | None:
     return None
 
 
-def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[Issue]]:
-    issues: list[Issue] = []
+def _read_skill_parts(path: Path) -> tuple[list[str], int | None, list[Issue]]:
     try:
-        text = path.read_text(encoding="utf-8")
+        lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeError) as exc:
-        return {}, [Issue("unreadable-file", path, str(exc))]
+        return [], None, [Issue("unreadable-file", path, str(exc))]
 
-    lines = text.splitlines()
     if not lines or lines[0].strip() != "---":
-        return {}, [Issue("missing-frontmatter", path, "SKILL.md must start with YAML frontmatter")]
+        return lines, None, [Issue("missing-frontmatter", path, "SKILL.md must start with YAML frontmatter")]
 
     try:
         end = next(index for index, line in enumerate(lines[1:], start=1) if line.strip() == "---")
     except StopIteration:
-        return {}, [Issue("unterminated-frontmatter", path, "frontmatter has no closing ---")]
+        return lines, None, [Issue("unterminated-frontmatter", path, "frontmatter has no closing ---")]
+    return lines, end, []
+
+
+def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[Issue]]:
+    lines, end, issues = _read_skill_parts(path)
+    if end is None:
+        return {}, issues
 
     values: dict[str, str] = {}
     for line_number, line in enumerate(lines[1:end], start=2):
@@ -61,7 +77,7 @@ def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[Issue]]:
         if not stripped or stripped.startswith("#"):
             continue
         if line.startswith((" ", "\t")):
-            # Nested YAML is not needed by the current frontmatter checks.
+            # Nested maps are validated separately where this repository relies on them.
             continue
         if ":" not in line:
             issues.append(Issue("invalid-frontmatter-line", path, f"line {line_number} has no ':'"))
@@ -71,21 +87,73 @@ def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[Issue]]:
     return values, issues
 
 
-def parse_openai_implicit_policy(path: Path) -> tuple[bool | None, list[Issue]]:
+def parse_metadata(path: Path) -> tuple[dict[str, str], list[Issue]]:
+    lines, end, issues = _read_skill_parts(path)
+    if end is None:
+        return {}, issues
+
+    metadata: dict[str, str] = {}
+    metadata_index: int | None = None
+    for index, line in enumerate(lines[1:end], start=1):
+        if line.strip() == "metadata:":
+            metadata_index = index
+            break
+    if metadata_index is None:
+        return {}, issues
+
+    for line_number, line in enumerate(lines[metadata_index + 1 : end], start=metadata_index + 2):
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if not line.startswith((" ", "\t")):
+            break
+        stripped = line.strip()
+        if ":" not in stripped:
+            issues.append(Issue("invalid-metadata-line", path, f"line {line_number} has no ':'"))
+            continue
+        key, value = stripped.split(":", 1)
+        key = key.strip()
+        value = value.strip().strip('"\'')
+        if not key or not value:
+            issues.append(Issue("invalid-metadata-value", path, f"line {line_number} must map a key to a string"))
+            continue
+        metadata[key] = value
+    return metadata, issues
+
+
+def skill_body(path: Path) -> str:
+    lines, end, _ = _read_skill_parts(path)
+    if end is None:
+        return ""
+    return "\n".join(lines[end + 1 :])
+
+
+def parse_openai_metadata(path: Path) -> tuple[dict[str, str | bool], list[Issue]]:
     if not path.exists():
-        return None, [Issue("missing-openai-metadata", path, "agents/openai.yaml is required")]
+        return {}, [Issue("missing-openai-metadata", path, "agents/openai.yaml is required")]
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError) as exc:
-        return None, [Issue("unreadable-file", path, str(exc))]
+        return {}, [Issue("unreadable-file", path, str(exc))]
+
+    issues: list[Issue] = []
+    values: dict[str, str | bool] = {}
+    for field in ("display_name", "short_description", "default_prompt"):
+        match = re.search(rf"^\s*{re.escape(field)}\s*:\s*([^#\n]+)", text, re.MULTILINE)
+        if not match:
+            issues.append(Issue("missing-openai-interface", path, f"interface.{field} is required"))
+            continue
+        values[field] = match.group(1).strip().strip('"\'')
 
     match = re.search(r"^\s*allow_implicit_invocation\s*:\s*([^#\n]+)", text, re.MULTILINE)
     if not match:
-        return None, [Issue("missing-openai-policy", path, "policy.allow_implicit_invocation is required")]
-    value = parse_bool(match.group(1))
-    if value is None:
-        return None, [Issue("invalid-openai-policy", path, "allow_implicit_invocation must be a boolean")]
-    return value, []
+        issues.append(Issue("missing-openai-policy", path, "policy.allow_implicit_invocation is required"))
+    else:
+        value = parse_bool(match.group(1))
+        if value is None:
+            issues.append(Issue("invalid-openai-policy", path, "allow_implicit_invocation must be a boolean"))
+        else:
+            values["allow_implicit_invocation"] = value
+    return values, issues
 
 
 def relative_markdown_targets(path: Path) -> list[str]:
@@ -119,11 +187,28 @@ def validate_markdown_links(skill_dir: Path) -> list[Issue]:
                 resolved.relative_to(skill_dir.resolve())
             except ValueError:
                 issues.append(
-                    Issue("relative-link-escapes-skill", markdown, f"relative link escapes the skill directory: {target}")
+                    Issue(
+                        "relative-link-escapes-skill",
+                        markdown,
+                        f"relative link escapes the skill directory: {target}",
+                    )
                 )
                 continue
             if not resolved.exists():
                 issues.append(Issue("missing-relative-link", markdown, f"linked file does not exist: {target}"))
+    return issues
+
+
+def validate_skill_scripts(skill_dir: Path) -> list[Issue]:
+    issues: list[Issue] = []
+    scripts_dir = skill_dir / "scripts"
+    if not scripts_dir.exists():
+        return issues
+    for path in sorted(scripts_dir.rglob("*")):
+        if path.is_symlink():
+            issues.append(Issue("symlinked-skill-script", path, "skill scripts must be auditable regular files"))
+        elif path.is_file() and not (path.stat().st_mode & stat.S_IXUSR):
+            issues.append(Issue("nonexecutable-skill-script", path, "skill scripts must be executable by the owner"))
     return issues
 
 
@@ -135,24 +220,135 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
 
     frontmatter, frontmatter_issues = parse_frontmatter(skill_md)
     issues.extend(frontmatter_issues)
+    metadata, metadata_issues = parse_metadata(skill_md)
+    issues.extend(metadata_issues)
 
     name = frontmatter.get("name", "")
     if not name:
         issues.append(Issue("missing-name", skill_md, "frontmatter.name is required"))
+    elif len(name) > MAX_NAME_CHARS:
+        issues.append(
+            Issue(
+                "name-too-long",
+                skill_md,
+                f"name has {len(name)} characters; maximum is {MAX_NAME_CHARS}",
+            )
+        )
     elif not NAME_RE.fullmatch(name):
-        issues.append(Issue("invalid-name", skill_md, "name must use lowercase kebab-case"))
+        issues.append(
+            Issue(
+                "invalid-name",
+                skill_md,
+                "name must use lowercase kebab-case without consecutive hyphens",
+            )
+        )
     elif name != skill_dir.name:
-        issues.append(Issue("name-directory-mismatch", skill_md, f"name '{name}' must match directory '{skill_dir.name}'"))
+        issues.append(
+            Issue(
+                "name-directory-mismatch",
+                skill_md,
+                f"name '{name}' must match directory '{skill_dir.name}'",
+            )
+        )
 
     description = frontmatter.get("description", "")
     if not description:
         issues.append(Issue("missing-description", skill_md, "frontmatter.description is required"))
-    elif len(description) > MAX_DESCRIPTION_CHARS:
+    else:
+        if len(description) > MAX_DESCRIPTION_CHARS:
+            issues.append(
+                Issue(
+                    "description-too-long",
+                    skill_md,
+                    f"description has {len(description)} characters; maximum is {MAX_DESCRIPTION_CHARS}",
+                )
+            )
+        if not re.search(r"\bUse\b", description):
+            issues.append(
+                Issue(
+                    "description-missing-positive-trigger",
+                    skill_md,
+                    "description must state when to use it",
+                )
+            )
+        if "Do not use" not in description:
+            issues.append(
+                Issue(
+                    "description-missing-negative-trigger",
+                    skill_md,
+                    "description must state a discriminative do-not-use condition",
+                )
+            )
+
+    compatibility = frontmatter.get("compatibility")
+    if compatibility is not None and (not compatibility or len(compatibility) > MAX_COMPATIBILITY_CHARS):
         issues.append(
             Issue(
-                "description-too-long",
+                "invalid-compatibility",
                 skill_md,
-                f"description has {len(description)} characters; maximum is {MAX_DESCRIPTION_CHARS}",
+                f"compatibility must contain 1-{MAX_COMPATIBILITY_CHARS} characters when present",
+            )
+        )
+
+    missing_metadata = sorted(REQUIRED_METADATA - metadata.keys())
+    if missing_metadata:
+        issues.append(
+            Issue(
+                "missing-assurance-metadata",
+                skill_md,
+                f"metadata is missing: {', '.join(missing_metadata)}",
+            )
+        )
+    status = metadata.get("assurance-validation-status")
+    if status is not None and status not in VALIDATION_STATUSES:
+        issues.append(
+            Issue(
+                "invalid-assurance-status",
+                skill_md,
+                f"assurance-validation-status must be one of {sorted(VALIDATION_STATUSES)}",
+            )
+        )
+    catalog = metadata.get("assurance-eval-catalog")
+    if catalog is not None:
+        catalog_path = Path(catalog)
+        repository_root = skill_dir.parents[1].resolve()
+        if catalog_path.is_absolute():
+            issues.append(
+                Issue(
+                    "invalid-assurance-catalog",
+                    skill_md,
+                    "assurance-eval-catalog must be a repository-relative path",
+                )
+            )
+        else:
+            resolved_catalog = (repository_root / catalog_path).resolve()
+            try:
+                resolved_catalog.relative_to(repository_root)
+            except ValueError:
+                issues.append(
+                    Issue(
+                        "invalid-assurance-catalog",
+                        skill_md,
+                        "assurance-eval-catalog escapes the repository",
+                    )
+                )
+            else:
+                if not resolved_catalog.is_file():
+                    issues.append(
+                        Issue(
+                            "missing-assurance-catalog",
+                            skill_md,
+                            f"assurance eval catalog does not exist: {catalog}",
+                        )
+                    )
+
+    body = skill_body(skill_md)
+    if REQUIRED_BODY_HEADING not in body:
+        issues.append(
+            Issue(
+                "missing-anti-applicability-section",
+                skill_md,
+                f"body must contain the exact heading '{REQUIRED_BODY_HEADING}'",
             )
         )
 
@@ -165,19 +361,40 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
             Issue(
                 "skill-too-long",
                 skill_md,
-                f"SKILL.md has {line_count} lines; move details into references/ and keep it at or below {MAX_SKILL_LINES}",
+                f"SKILL.md has {line_count} lines; move details into references/ "
+                f"and keep it at or below {MAX_SKILL_LINES}",
+            )
+        )
+
+    user_invocable_raw = frontmatter.get("user-invocable")
+    user_invocable = (
+        parse_bool(user_invocable_raw) if user_invocable_raw is not None else None
+    )
+    if user_invocable is None:
+        issues.append(
+            Issue(
+                "invalid-claude-policy",
+                skill_md,
+                "user-invocable must be an explicit boolean",
             )
         )
 
     disable_raw = frontmatter.get("disable-model-invocation")
-    disable_model = parse_bool(disable_raw) if disable_raw is not None else False
+    disable_model = parse_bool(disable_raw) if disable_raw is not None else None
     if disable_model is None:
         issues.append(
-            Issue("invalid-claude-policy", skill_md, "disable-model-invocation must be a boolean when present")
+            Issue(
+                "invalid-claude-policy",
+                skill_md,
+                "disable-model-invocation must be an explicit boolean",
+            )
         )
-    allow_implicit, metadata_issues = parse_openai_implicit_policy(skill_dir / "agents" / "openai.yaml")
-    issues.extend(metadata_issues)
-    if disable_model is not None and allow_implicit is not None and allow_implicit == disable_model:
+
+    openai_path = skill_dir / "agents" / "openai.yaml"
+    openai, openai_issues = parse_openai_metadata(openai_path)
+    issues.extend(openai_issues)
+    allow_implicit = openai.get("allow_implicit_invocation")
+    if disable_model is not None and isinstance(allow_implicit, bool) and allow_implicit == disable_model:
         issues.append(
             Issue(
                 "invocation-policy-mismatch",
@@ -186,7 +403,28 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
             )
         )
 
+    short_description = openai.get("short_description")
+    if isinstance(short_description, str) and len(short_description) > MAX_OPENAI_SHORT_DESCRIPTION_CHARS:
+        issues.append(
+            Issue(
+                "openai-short-description-too-long",
+                openai_path,
+                f"short_description has {len(short_description)} characters; "
+                f"maximum is {MAX_OPENAI_SHORT_DESCRIPTION_CHARS}",
+            )
+        )
+    default_prompt = openai.get("default_prompt")
+    if name and isinstance(default_prompt, str) and f"${name}" not in default_prompt:
+        issues.append(
+            Issue(
+                "openai-default-prompt-missing-skill",
+                openai_path,
+                f"default_prompt must explicitly mention ${name}",
+            )
+        )
+
     issues.extend(validate_markdown_links(skill_dir))
+    issues.extend(validate_skill_scripts(skill_dir))
     return issues
 
 
@@ -202,8 +440,19 @@ def validate_repository(root: Path) -> list[Issue]:
         issues.append(Issue("no-skills", skills_root, "no skill directories found"))
         return issues
 
+    description_total = 0
     for skill_dir in skill_dirs:
         issues.extend(validate_skill(skill_dir))
+        frontmatter, _ = parse_frontmatter(skill_dir / "SKILL.md")
+        description_total += len(frontmatter.get("description", ""))
+    if description_total > MAX_INITIAL_DESCRIPTION_CHARS:
+        issues.append(
+            Issue(
+                "initial-description-budget-exceeded",
+                skills_root,
+                f"skill descriptions total {description_total} characters; budget is {MAX_INITIAL_DESCRIPTION_CHARS}",
+            )
+        )
     return sorted(issues, key=lambda issue: (str(issue.path), issue.code, issue.message))
 
 

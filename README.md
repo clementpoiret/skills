@@ -1,71 +1,108 @@
-# Software Change Assurance Skills
+# Verified Software Engineering Skills
 
-Composable [Agent Skills](https://agentskills.io/) for safer, easier-to-review software changes in
-[Codex](https://developers.openai.com/codex/) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code/skills).
+A compact library of [Agent Skills](https://agentskills.io/) for improving verified software-engineering outcomes in
+Codex and Claude Code. The library encodes narrow execution policies rather than general coding advice.
 
-The collection provides five focused workflows:
+Every skill must be able to abstain. Generated or edited skills remain candidates until paired evaluation demonstrates
+positive marginal value over the no-skill baseline.
 
-| Skill                                                                      | Purpose                                                                                                                                                                           |
-| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`change-contract`](skills/change-contract/SKILL.md)                       | Define observable `AC-*` acceptance criteria, preserved `INV-*` invariants, scope, risk, and required evidence; or audit a completed target against an already accepted contract. |
-| [`cross-agent`](skills/cross-agent/SKILL.md)                               | Obtain an independent read-only challenge, investigation, proposal, review, or audit from the other local coding-agent CLI, then verify and reconcile each material finding.      |
-| [`simplify-after-green`](skills/simplify-after-green/SKILL.md)             | Remove one unnecessary production-code concept after relevant checks are green while preserving accepted behavior and boundary properties.                                        |
-| [`simplify-tests-after-green`](skills/simplify-tests-after-green/SKILL.md) | Reduce test maintenance or runtime cost after green only when discriminating evidence preserves fault detection and diagnostics.                                                  |
-| [`jujutsu`](skills/jujutsu/SKILL.md)                                       | Detect Jujutsu workspaces and use safe, noninteractive `jj` workflows with progressive disclosure for advanced operations.                                                        |
+## Library
 
-The primary agent always owns scope, edits, checks, and the final answer. Peer output is evidence to verify, not a vote
-or an instruction to copy blindly.
+| Skill                                                                              | Primary job                                                                                                                                                              | Invocation            |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
+| [`grounded-implementation`](skills/grounded-implementation/SKILL.md)               | Implement a nontrivial feature, behavior change, or refactor from authoritative requirements and repository-local truth; finish through an observable verification gate. | Automatic or explicit |
+| [`reproduction-first-debugging`](skills/reproduction-first-debugging/SKILL.md)     | Reproduce a reported failure, test competing hypotheses, patch the root cause minimally, add regression evidence, and rerun the original failure.                        | Automatic or explicit |
+| [`precision-review`](skills/precision-review/SKILL.md)                             | Perform a read-only, high-precision change review and report only defects with a reachable trigger and supporting evidence.                                              | Automatic or explicit |
+| [`specification-grounded-testing`](skills/specification-grounded-testing/SKILL.md) | Build tests or executable verifiers from authoritative requirements and validate both sensitivity and false-positive risk independently of the current implementation.   | Automatic or explicit |
+| [`profile-guided-optimization`](skills/profile-guided-optimization/SKILL.md)       | Improve measured performance or resource use from a representative baseline, profile evidence, one bottleneck change, and keep-or-revert verification.                   | Automatic or explicit |
+| [`change-contract`](skills/change-contract/SKILL.md)                               | Explicitly define observable `AC-*` acceptance criteria and `INV-*` invariants, or audit a target against an already accepted contract.                                  | Explicit only         |
+| [`simplify-after-green`](skills/simplify-after-green/SKILL.md)                     | Remove at most one unnecessary production-code concept after credible green evidence, preserving accepted behavior.                                                      | Explicit only         |
+| [`simplify-tests-after-green`](skills/simplify-tests-after-green/SKILL.md)         | Reduce green-suite maintenance or runtime cost only when discriminating evidence preserves fault detection and diagnostics.                                              | Explicit only         |
+| [`cross-agent`](skills/cross-agent/SKILL.md)                                       | Obtain one independent Claude/Codex peer analysis, then verify and reconcile every material finding.                                                                     | Explicit only         |
+| [`jujutsu`](skills/jujutsu/SKILL.md)                                               | Detect active Jujutsu workspaces and use safe, noninteractive, version-aware `jj` workflows.                                                                             | Automatic or explicit |
+
+The original five procedures remain intact except for compact anti-applicability and validation metadata. Five primary
+task-family skills now cover implementation, debugging, review, test-oracle construction, and measured optimization.
+
+## Routing and composition
+
+Use zero skills when none changes the execution policy usefully. For ordinary software changes, select at most one
+primary task-family skill:
+
+1. **Read-only diff, commit, pull-request, or working-copy review** → `precision-review`.
+1. **Known failure to diagnose or repair, including a regression** → `reproduction-first-debugging`.
+1. **Tests, conformance suite, or executable verifier as the primary deliverable** → `specification-grounded-testing`.
+1. **Measured optimization of behavior already accepted as correct** → `profile-guided-optimization`.
+1. **Otherwise, nontrivial requested implementation or refactor** → `grounded-implementation`.
+
+The explicit skills do not compete for automatic routing:
+
+- `change-contract` defines requirements before implementation or grades an accepted contract after implementation.
+- `simplify-after-green` and `simplify-tests-after-green` run only at a credible green checkpoint.
+- `cross-agent` runs only when the user authorizes another provider and independent peer cost.
+
+`jujutsu` is orthogonal. It may compose with one primary skill solely for VCS mechanics when `jj root` succeeds.
+
+There is intentionally no separately routed “repository exploration,” “dependency safety,” or “final verification”
+skill. Local-truth discovery, resolved-version checks, and completion gates remain phases inside the primary procedures.
+Property/fuzz testing is part of specification-grounded testing when tests are the deliverable and remains a triggered
+branch elsewhere. Performance regressions remain debugging; profile-guided optimization is only for accepted-correct
+behavior. This avoids making a normal bug fix activate a stack of semantically similar skills.
 
 ## Invocation policy
 
-The policy is intentionally conservative. Workflows that can edit code, remove tests, make an external peer call, or
-change the meaning of a review are explicit-only. Jujutsu is eligible for automatic activation because using the wrong
-VCS mutation surface in an active `jj` workspace is itself hazardous.
-
-| Skill                        | Codex                 | Claude Code           |
-| ---------------------------- | --------------------- | --------------------- |
-| `change-contract`            | Explicit only         | Explicit only         |
-| `cross-agent`                | Explicit only         | Explicit only         |
-| `simplify-after-green`       | Explicit only         | Explicit only         |
-| `simplify-tests-after-green` | Explicit only         | Explicit only         |
-| `jujutsu`                    | Automatic or explicit | Automatic or explicit |
+| Skill                            | Codex                 | Claude Code           |
+| -------------------------------- | --------------------- | --------------------- |
+| `grounded-implementation`        | Automatic or explicit | Automatic or explicit |
+| `reproduction-first-debugging`   | Automatic or explicit | Automatic or explicit |
+| `precision-review`               | Automatic or explicit | Automatic or explicit |
+| `specification-grounded-testing` | Automatic or explicit | Automatic or explicit |
+| `profile-guided-optimization`    | Automatic or explicit | Automatic or explicit |
+| `change-contract`                | Explicit only         | Explicit only         |
+| `cross-agent`                    | Explicit only         | Explicit only         |
+| `simplify-after-green`           | Explicit only         | Explicit only         |
+| `simplify-tests-after-green`     | Explicit only         | Explicit only         |
+| `jujutsu`                        | Automatic or explicit | Automatic or explicit |
 
 Explicit syntax:
 
 ```text
 # Codex
 $change-contract Define a contract for making password-reset tokens single-use. Do not implement it.
+$grounded-implementation Implement the accepted contract and verify every AC-* and INV-* item.
+$specification-grounded-testing Add a conformance suite for the accepted contract. Do not edit production code.
+$profile-guided-optimization Optimize the accepted implementation against the supplied benchmark and guardrails.
 
 # Claude Code
 /change-contract Define a contract for making password-reset tokens single-use. Do not implement it.
+/grounded-implementation Implement the accepted contract and verify every AC-* and INV-* item.
+/specification-grounded-testing Add a conformance suite for the accepted contract. Do not edit production code.
+/profile-guided-optimization Optimize the accepted implementation against the supplied benchmark and guardrails.
 ```
 
-To compose explicit-only skills, invoke each one in the same user request:
+Explicit composition remains user-controlled:
 
 ```text
-# Codex: independent contract challenge
-$cross-agent $change-contract Define and independently challenge a contract for making tokens single-use.
+# Codex
+$cross-agent $precision-review Review the current diff and independently challenge only material findings.
 
-# Claude Code: independent preservation review
-/cross-agent /simplify-after-green Simplify the green change and obtain a fresh read-only preservation review.
+# Claude Code
+/cross-agent /simplify-after-green Simplify the green change and obtain a fresh preservation review.
 ```
 
-A loaded `change-contract` or `simplify-after-green` skill does not silently invoke `cross-agent`. This preserves user
-control over network access, quota, provider disclosure, and latency.
+No skill silently invokes `cross-agent`.
 
 ## Requirements
 
-- A local Codex or Claude Code installation for the chosen host.
-- Both `codex` and `claude`, installed, authenticated, and available on `PATH`, to use `cross-agent` in both directions.
-- Git to clone and update this repository.
-- Jujutsu only for repositories where the `jujutsu` workflow is needed.
-- Python 3.10 or later to run the dependency-free repository validation and evaluation utilities.
+- Codex or Claude Code for the chosen host.
+- Repository read/search/edit tools and project-native checks for the five primary skills; representative benchmark or
+  deterministic cost tooling for profile-guided optimization.
+- Both `codex` and `claude`, installed and authenticated, only when using `cross-agent` in both directions.
+- Jujutsu only for repositories where `jujutsu` applies.
+- Python 3.10 or later for dependency-free repository validation and evaluation utilities.
 
-`cross-agent` launches the peer CLI in the same repository and execution environment as the primary. The peer call uses
-the invoked CLI's authentication, entitlement, quota, billing, and data-handling configuration. The skill preflights the
-installed command surface and does not assume that a moving model alias, reasoning-effort value, or CLI flag is
-available. When a peer cannot run, the primary continues its own analysis and reports the exact limitation; it never
-invents a peer verdict.
+`cross-agent` uses the peer CLI's configured authentication, billing, quota, and data-handling policy. It preflights the
+installed command surface and does not assume moving model aliases or CLI flags.
 
 ## Installation
 
@@ -85,7 +122,18 @@ link_skills() {
   skills_dir="$1"
   mkdir -p "$skills_dir"
 
-  for skill in change-contract cross-agent simplify-after-green simplify-tests-after-green jujutsu; do
+  for skill in \
+    grounded-implementation \
+    reproduction-first-debugging \
+    precision-review \
+    specification-grounded-testing \
+    profile-guided-optimization \
+    change-contract \
+    cross-agent \
+    simplify-after-green \
+    simplify-tests-after-green \
+    jujutsu
+  do
     destination="$skills_dir/$skill"
     if [ -e "$destination" ] || [ -L "$destination" ]; then
       printf 'skip %s (already exists)\n' "$destination"
@@ -99,21 +147,14 @@ link_skills "$HOME/.agents/skills"  # Codex
 link_skills "$HOME/.claude/skills"  # Claude Code
 ```
 
-Remove the line for a host you do not use. For project-scoped installation, use `<project>/.agents/skills` for Codex and
-`<project>/.claude/skills` for Claude Code. Teams can vendor selected skill directories into those paths instead of
-using personal symlinks.
+For project-scoped installation, use `<project>/.agents/skills` for Codex and `<project>/.claude/skills` for Claude
+Code.
 
 ### Verify discovery
 
-Start the host from a repository and list available skills:
-
-- Codex: `/skills`; look for `$change-contract`, `$cross-agent`, `$simplify-after-green`, `$simplify-tests-after-green`,
-  and `$jujutsu`.
-- Claude Code: `/skills`; look for `/change-contract`, `/cross-agent`, `/simplify-after-green`,
-  `/simplify-tests-after-green`, and `/jujutsu`.
-
-If a linked skill is missing, restart the host and verify that the resolved directory contains `SKILL.md` and, for Codex
-metadata, `agents/openai.yaml`.
+In Codex, run `/skills` or type `$` to select a skill. In Claude Code, type `/` followed by the skill name. If a skill
+is missing, verify the resolved directory contains `SKILL.md`; this repository also requires `agents/openai.yaml` for
+Codex UI and invocation metadata.
 
 ### Update
 
@@ -121,138 +162,112 @@ metadata, `agents/openai.yaml`.
 git -C "$HOME/.local/share/clementpoiret-skills" pull --ff-only
 ```
 
-## Recommended workflow
+## Representative workflows
 
-The example below keeps one primary agent responsible throughout. Replace `$...` with `/...` when Claude Code is the
-primary.
-
-### 1. Define and optionally challenge the contract
-
-Primary-only:
+### Implement a nontrivial change
 
 ```text
-$change-contract Define a change contract for making password-reset tokens single-use. Do not implement it.
+Implement tenant-aware caching while preserving the existing expiry contract and public API. Run focused checks and the
+relevant regression suite.
 ```
 
-With an independent peer challenge:
+`grounded-implementation` should establish the requirements, inspect consumers and repository versions, make the
+smallest coherent patch, and independently re-check the original task against actual execution evidence.
+
+For high-risk work, define the contract explicitly first:
 
 ```text
-$cross-agent $change-contract Act as the primary owner. Define a change contract for making password-reset tokens
-single-use, ask the peer to challenge omissions and risk, verify the peer's claims, and return the accepted AC-* and
-INV-* items. Do not implement yet.
+$change-contract Define AC-* and INV-* items for the tenant-cache change. Do not implement it.
+$grounded-implementation Implement the accepted contract and report evidence for every item.
 ```
 
-### 2. Implement and verify as the primary
+### Debug a failure
 
 ```text
-Implement the accepted contract. Make the smallest complete change, add the required regression evidence, run focused
-checks followed by repository-required broader checks, and preserve unrelated working-copy edits.
+This test started failing after the configuration change. Reproduce it, compare competing causes, fix the root cause,
+add a regression test, and rerun the original command.
 ```
 
-### 3. Audit the result
+`reproduction-first-debugging` must not begin with a speculative patch. When the failure cannot be reproduced or
+proxied, an investigation-only result is valid.
 
-Primary-only:
+### Review a change
 
 ```text
-$change-contract Audit the current working copy against the accepted contract. Grade every AC-* and INV-* item using
-required evidence, observed evidence, and evidence status. Do not edit code.
+Review the current diff for concrete regressions. Do not edit it and suppress findings that cannot be tied to a reachable
+trigger.
 ```
 
-With an independent peer:
+`precision-review` recovers intent, traces affected contracts and consumers, and treats no findings as valid. Use
+`$change-contract` or `/change-contract` instead for a formal accepted-contract audit.
+
+### Build an independent test oracle
 
 ```text
-$cross-agent $change-contract Audit the current working copy against the accepted contract. Obtain a fresh read-only
-peer audit, verify every material finding, and reconcile accepted, rejected, and unresolved findings.
+Add a conformance suite for the accepted resource-identifier specification. Do not modify production code. Show which
+plausible wrong behaviors the tests reject and which obligations remain unverified.
 ```
 
-### 4. Simplify production code after green
+`specification-grounded-testing` freezes the authoritative requirement, maps obligations to discriminating checks, and
+requires known-valid behavior to pass plus known-bad, mutated, or independently wrong behavior to fail. A
+`defect-exposed` result is valid when a correct test reveals a production defect outside the requested scope.
+
+### Optimize measured behavior
 
 ```text
-$simplify-after-green The relevant checks are green. Remove at most one unnecessary concept while preserving the
-accepted contract. Re-run the baseline and broader required checks.
+The implementation is correct and green. Reduce batch lookup cost for the supplied workload, preserve first-match
+semantics, and keep the change only if the same benchmark and correctness checks pass.
 ```
 
-Use `$cross-agent $simplify-after-green` only when an independent preservation review is worth its cost and disclosure.
+`profile-guided-optimization` fixes the workload and guardrails, records a baseline, profiles or uses deterministic cost
+evidence, changes one bottleneck, and explicitly keeps or reverts the candidate. A `no-change` or `measurement-only`
+result is valid when the improvement is noisy, unrepresentative, or not worth the complexity.
 
-### 5. Simplify tests only by explicit request
+### Simplify after green
 
 ```text
-$simplify-tests-after-green The focused and broader baselines are green. Review only tests affected by this change.
-Remove or merge a candidate only when a mutation, known-bad replay, or exact static equivalence proves that surviving
-evidence catches the same realistic fault.
+$simplify-after-green The accepted behavior and relevant checks are green. Remove at most one unnecessary production
+concept and rerun the baseline.
 ```
 
-A `no-change` result is valid for both simplification skills.
+```text
+$simplify-tests-after-green The suite is green. Remove or merge a test only when a mutation, known-bad replay, or exact
+static equivalence proves that surviving evidence catches the same realistic fault.
+```
+
+A `no-change` result is valid.
 
 ## Jujutsu behavior
 
-`jujutsu` is the only implicitly invocable skill. Its first operation is `jj root`; the skill stops applying when that
-command fails. In an active workspace it prefers `jj` for mutations, treats detached Git HEAD as normal in colocated
-repositories, and verifies repository state after every mutation.
+`jujutsu` is eligible for automatic activation because using Git mutation commands in an active colocated Jujutsu
+workspace can target the wrong state model. Its first operation is `jj root`; it stops when that command fails.
+Installed `jj` help is authoritative when the repository's reviewed 0.44 guidance differs from the local version.
 
-The main skill remains small. Advanced guidance is loaded only when relevant:
-
-- history and rewrites;
-- conflicts and operation-log recovery;
-- bookmarks, remotes, fetch, push, and tags;
-- workspaces;
-- configuration and external commands through `jj run`;
-- revision-description policy;
-- version compatibility.
-
-Jujutsu does not impose Conventional Commits globally. The skill follows the repository's own revision-description
-policy and uses Conventional Commits only when that policy or the user requires them.
+Advanced material remains progressively disclosed under `skills/jujutsu/references/`.
 
 ## Validation and evaluation
 
-Run the static and unit checks before publishing changes:
+Run the complete local gate:
 
 ```sh
 python scripts/validate_skills.py
+python scripts/eval_results.py check-cases evals/cases.jsonl
+python scripts/eval_fixtures.py check
 python -m unittest discover -s tests -v
 ```
 
-The validator checks:
+The validator checks Agent Skills limits, discriminative positive and negative discovery metadata, cross-host invocation
+alignment, Codex UI metadata, provenance fields, anti-applicability sections, script permissions, relative links, and
+the initial description budget.
 
-- required frontmatter and kebab-case names;
-- alignment between Claude `disable-model-invocation` and Codex `allow_implicit_invocation`;
-- a maximum of 500 lines in each main `SKILL.md`;
-- existence and containment of relative Markdown references.
+The evaluation catalog contains positive, negative, confusable, procedural, failure/escape, and counterfactual cases.
+Five deterministic fixtures provide independent verifiers for grounded implementation, root-cause debugging,
+high-precision review, specification-grounded test sensitivity, and semantics-preserving optimization. See
+[`EVALS.md`](EVALS.md) for paired no-skill, skill, workflow-memory, and wrong-skill trials.
 
-`EVALS.md` defines the empirical protocol. `evals/cases.jsonl` contains trigger, near-miss, procedural, and failure
-cases, including dedicated test-simplification cases. Validate the case catalog and recorded runs with:
-
-```sh
-python scripts/eval_results.py check-cases evals/cases.jsonl
-python scripts/eval_results.py check-results .eval-results/runs.jsonl
-python scripts/eval_results.py summarize .eval-results/runs.jsonl
-```
-
-Measure skill availability, selection, actual access, downstream success, failure category, tokens, and wall time as
-separate fields. Compare fresh-session `raw` and `skill` arms; do not treat successful invocation as proof of task
-success.
-
-## Repository layout
-
-```text
-skills/<name>/SKILL.md              Core instructions loaded when the skill runs
-skills/<name>/agents/openai.yaml    Codex display metadata and invocation policy
-skills/<name>/references/*.md       On-demand detail for larger workflows
-scripts/validate_skills.py          Dependency-free static validator
-scripts/eval_results.py             JSONL case/result validation and summary utility
-evals/cases.jsonl                   Versioned evaluation catalog
-EVALS.md                            Evaluation protocol and result schema
-tests/                              Regression tests for repository contracts
-```
-
-## Security and operational notes
-
-- A dirty working copy is supported; clean status is not a precondition.
-- Never use reset, checkout, or broad history cleanup to make a skill easier to run.
-- `allowed-tools` grants or preapproves matching calls on hosts that support it; it is not a denial boundary. Use host
-  permissions, deny rules, hooks, and sandboxing for enforcement.
-- A required runtime check that was not observed remains missing evidence.
-- Peer review can be unavailable, stale, wrong, or more expensive than primary analysis. The primary must verify it.
+Static checks and fixture self-tests do **not** establish skill lift. Do not promote metadata from `candidate` to a
+stronger status until frozen-model, frozen-harness A/B trials show positive verified marginal value without unacceptable
+routing, resource, or regression cost.
 
 ## License
 

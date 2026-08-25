@@ -1,6 +1,9 @@
 ---
 name: cross-agent
-description: Ask the other local coding agent—Claude from Codex or Codex from Claude—for an independent challenge, investigation, proposal, review, or audit, then verify and reconcile its findings. Works with dirty Git and Jujutsu working copies. Explicit invocation is required because peer calls use network access, quota, and an external provider.
+description: Ask the other local coding agent—Claude from Codex or Codex from Claude—for an independent challenge, investigation, proposal, review, or audit, then verify and reconcile its findings. Works with dirty Git and Jujutsu working copies. Use only when explicitly invoked. Do not use when provider disclosure, network access, quota, or an independent peer is not authorized.
+metadata:
+  assurance-validation-status: "candidate"
+  assurance-eval-catalog: "evals/cases.jsonl"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -12,6 +15,14 @@ authority, vote, or replacement for verification.
 
 Honor repository data-handling policy. Do not send secrets or unrelated sensitive content. Never allow the peer to
 invoke `cross-agent`, another delegation or orchestration skill, subagents, agent teams, or another external agent.
+
+## Do not use when
+
+- The user did not explicitly invoke `$cross-agent` or `/cross-agent`.
+- Repository policy or the user does not authorize disclosure to the peer provider, network use, quota, or billing.
+- The requested value is not independence—for example, ordinary implementation or review that the primary can perform
+  directly.
+- The peer CLI cannot be preflighted safely. Continue the primary analysis and report the limitation.
 
 ## Use only when explicitly invoked
 

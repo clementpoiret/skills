@@ -1,0 +1,14 @@
+{
+  "findings": [
+    {
+      "id": "tenant-cache-key-collision",
+      "severity": "high",
+      "location": "after/cache.py:9",
+      "mechanism": "Concatenating arbitrary tenant IDs and cache keys with the colon delimiter ':' is not injective, so distinct tenant/key pairs can map to the same storage key.",
+      "trigger": "For example tenant='a:b', key='c' and tenant='a', key='b:c'.",
+      "consequence": "One tenant can read, overwrite, expire, or invalidate another tenant's cached value.",
+      "evidence": "intent.md permits ':' in both fields, while _tenant_key returns one delimiter-joined string and invalidate_tenant uses the same ambiguous prefix.",
+      "verification": "Put both example pairs with different bytes and observe that the second overwrites the first; then invalidate tenant 'a' and observe cross-tenant deletion."
+    }
+  ]
+}

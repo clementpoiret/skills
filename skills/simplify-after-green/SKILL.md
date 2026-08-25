@@ -1,6 +1,9 @@
 ---
 name: simplify-after-green
-description: Simplify an already-correct code change after relevant checks are green. Remove unnecessary concepts while preserving accepted behavior, tests, interfaces, security, compatibility, concurrency, performance, and operational properties. Works with dirty Git or Jujutsu working copies; use after implementation and do not add features or redesign the system.
+description: Simplify an already-correct code change after relevant checks are green. Remove unnecessary concepts while preserving accepted behavior, tests, interfaces, security, compatibility, concurrency, performance, and operational properties. Use only after implementation by explicit invocation. Do not use to fix failures, add behavior, redesign the system, simplify tests, or pursue measured performance optimization.
+metadata:
+  assurance-validation-status: "candidate"
+  assurance-eval-catalog: "evals/cases.jsonl"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -9,6 +12,16 @@ disable-model-invocation: true
 
 Reduce conceptual surface only after the change has credible evidence of correctness. The goal is easier reasoning and
 maintenance, not fewer lines.
+
+## Do not use when
+
+- Relevant behavior or checks are failing, flaky, unobserved, or lack a credible baseline.
+- The task is to add behavior, repair a defect, redesign architecture, or change an accepted contract.
+- The target is test-suite simplification rather than production-code conceptual simplification. Use
+  `simplify-tests-after-green`.
+- The primary objective is a measured performance or resource improvement rather than conceptual simplification. Use
+  `profile-guided-optimization`.
+- No meaningful concept can be removed without increasing risk or obscuring invariants; return `no-change`.
 
 ## Preconditions
 

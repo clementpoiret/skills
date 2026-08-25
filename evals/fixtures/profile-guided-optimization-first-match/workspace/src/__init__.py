@@ -1,0 +1,1 @@
+"""Profile-guided optimization fixture."""

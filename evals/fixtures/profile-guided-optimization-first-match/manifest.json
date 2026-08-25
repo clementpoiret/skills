@@ -1,0 +1,9 @@
+{
+  "id": "profile-guided-optimization-first-match",
+  "skill": "profile-guided-optimization",
+  "mode": "workspace",
+  "task": "task.md",
+  "workspace": "workspace",
+  "verifier": "verify.py",
+  "baseline_expected": "fail"
+}

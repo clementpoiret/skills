@@ -1,0 +1,9 @@
+{
+  "id": "specification-grounded-testing-resource-id",
+  "skill": "specification-grounded-testing",
+  "mode": "workspace",
+  "task": "task.md",
+  "workspace": "workspace",
+  "verifier": "verify.py",
+  "baseline_expected": "fail"
+}

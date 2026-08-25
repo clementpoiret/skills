@@ -1,0 +1,1 @@
+"""Specification-grounded testing fixture."""

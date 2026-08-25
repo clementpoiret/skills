@@ -1,0 +1,9 @@
+{
+  "id": "grounded-implementation-single-use-token",
+  "skill": "grounded-implementation",
+  "mode": "workspace",
+  "task": "task.md",
+  "workspace": "workspace",
+  "verifier": "verify.py",
+  "baseline_expected": "fail"
+}

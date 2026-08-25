@@ -1,0 +1,26 @@
+--- a/cache.py
++++ b/cache.py
+@@ -8,2 +8,7 @@
+-    def get(self, key: str, now: float) -> bytes | None:
+-        entry = self._entries.get(key)
++    @staticmethod
++    def _tenant_key(tenant_id: str, key: str) -> str:
++        return f"{tenant_id}:{key}"
++
++    def get(self, tenant_id: str, key: str, now: float) -> bytes | None:
++        storage_key = self._tenant_key(tenant_id, key)
++        entry = self._entries.get(storage_key)
+@@ -14 +19 @@
+-            del self._entries[key]
++            del self._entries[storage_key]
+@@ -18 +23 @@
+-    def put(self, key: str, value: bytes, ttl_seconds: float, now: float) -> None:
++    def put(self, tenant_id: str, key: str, value: bytes, ttl_seconds: float, now: float) -> None:
+@@ -21 +26,6 @@
+-        self._entries[key] = (value, now + ttl_seconds)
++        self._entries[self._tenant_key(tenant_id, key)] = (value, now + ttl_seconds)
++
++    def invalidate_tenant(self, tenant_id: str) -> None:
++        prefix = f"{tenant_id}:"
++        for storage_key in [key for key in self._entries if key.startswith(prefix)]:
++            del self._entries[storage_key]

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Reproduction-First Debugging"
+  short_description: "Reproduce failures, falsify hypotheses, patch root causes, and prove regressions"
+  default_prompt: "Use $reproduction-first-debugging to preserve the failure, run discriminating experiments, fix the root cause minimally, and rerun the original reproduction."
+
+policy:
+  allow_implicit_invocation: true

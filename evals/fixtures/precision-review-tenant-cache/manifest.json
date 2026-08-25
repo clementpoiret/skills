@@ -1,0 +1,10 @@
+{
+  "id": "precision-review-tenant-cache",
+  "skill": "precision-review",
+  "mode": "artifact",
+  "task": "task.md",
+  "workspace": "workspace",
+  "verifier": "verify.py",
+  "accepted_sample": "samples/accepted.json",
+  "rejected_sample": "samples/speculative.json"
+}

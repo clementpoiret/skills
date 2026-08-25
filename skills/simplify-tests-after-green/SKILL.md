@@ -1,6 +1,9 @@
 ---
 name: simplify-tests-after-green
-description: Use when a green test suite has accumulated duplicate, overlapping, slow, brittle, implementation-coupled, or low-value tests after TDD, debugging, or repeated feature work. Do not use while relevant behavior is failing or when the goal is to weaken regression coverage.
+description: Simplify a green test suite with duplicate, overlapping, slow, brittle, implementation-coupled, or low-value tests only when fault-detection evidence is preserved. Use after stable implementation by explicit invocation. Do not use while behavior is failing, to add or strengthen tests, delete flaky regressions, weaken coverage, simplify production code, or optimize product performance.
+metadata:
+  assurance-validation-status: "candidate"
+  assurance-eval-catalog: "evals/cases.jsonl"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -12,6 +15,18 @@ realistic regressions remain at least as detectable and failures remain diagnosa
 
 Invoke this at a stable green checkpoint, normally after feature or debugging work and before final validation—not
 inside a failing RED/GREEN iteration.
+
+## Do not use when
+
+- Relevant behavior, fixtures, or baselines are failing, flaky, or not reproducible.
+- The goal is to delete an inconvenient regression, weaken fault detection, or optimize test count or coverage percentage.
+- The task is production-code simplification. Use `simplify-after-green`.
+- The user asks to add or strengthen tests rather than remove proven redundancy. Use
+  `specification-grounded-testing`.
+- The primary objective is a product or build benchmark, or runtime optimization. Use
+  `profile-guided-optimization`.
+- No safe discriminator can establish equivalent fault detection within the pass budget; retain the test or return
+  `no-change`.
 
 ## Preconditions
 

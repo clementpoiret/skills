@@ -1,0 +1,7 @@
+interface:
+  display_name: "Specification-Grounded Testing"
+  short_description: "Build independent executable tests from authoritative requirements"
+  default_prompt: "Use $specification-grounded-testing to derive a requirement-to-test oracle and validate its sensitivity without changing production behavior."
+
+policy:
+  allow_implicit_invocation: true

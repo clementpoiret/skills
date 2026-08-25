@@ -1,6 +1,9 @@
 ---
 name: jujutsu
-description: Detect Jujutsu repositories and use safe, noninteractive `jj` workflows for status, diffs, revisions, bookmarks, tags, remotes, conflicts, workspaces, configuration, and recovery. Prefer `jj` for repository mutations in an active Jujutsu workspace. A detached Git HEAD is normal in colocated repositories.
+description: Detect Jujutsu repositories and use safe, noninteractive `jj` workflows for status, diffs, revisions, bookmarks, tags, remotes, conflicts, workspaces, configuration, and recovery. Use for repository VCS work when `jj root` succeeds. Do not use when `jj root` fails or the request is unrelated to version control.
+metadata:
+  assurance-validation-status: "candidate"
+  assurance-eval-catalog: "evals/cases.jsonl"
 allowed-tools: Bash(jj *)
 user-invocable: true
 disable-model-invocation: false
@@ -9,6 +12,12 @@ disable-model-invocation: false
 # Jujutsu (`jj`) Version Control
 
 Use this skill whenever the current directory is inside a Jujutsu workspace, even when the user does not mention `jj`.
+
+## Do not use when
+
+- `jj root` fails for the current working directory. A nearby `.jj/` directory is not sufficient.
+- The request is unrelated to repository version-control state or operations.
+- The repository is Git-only and no active Jujutsu workspace governs it.
 
 ## 1. Detect the workspace and installed version
 

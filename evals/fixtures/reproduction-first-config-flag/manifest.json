@@ -1,0 +1,9 @@
+{
+  "id": "reproduction-first-config-flag",
+  "skill": "reproduction-first-debugging",
+  "mode": "workspace",
+  "task": "task.md",
+  "workspace": "workspace",
+  "verifier": "verify.py",
+  "baseline_expected": "fail"
+}

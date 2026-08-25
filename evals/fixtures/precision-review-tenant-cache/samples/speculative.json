@@ -1,0 +1,24 @@
+{
+  "findings": [
+    {
+      "id": "missing-lock",
+      "severity": "high",
+      "location": "after/cache.py:4",
+      "mechanism": "The dictionary has no mutex.",
+      "trigger": "Concurrent access.",
+      "consequence": "Possible race.",
+      "evidence": "No lock is visible.",
+      "verification": "Run threads."
+    },
+    {
+      "id": "expiry-comparison",
+      "severity": "medium",
+      "location": "after/cache.py:18",
+      "mechanism": "Using >= may expire entries too early.",
+      "trigger": "now equals expires_at.",
+      "consequence": "Cache miss.",
+      "evidence": "Comparison uses >=.",
+      "verification": "Call get at the boundary."
+    }
+  ]
+}

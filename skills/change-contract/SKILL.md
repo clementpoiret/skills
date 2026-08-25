@@ -1,6 +1,9 @@
 ---
 name: change-contract
-description: Define or audit a bounded code-change contract with observable acceptance criteria, preserved invariants, risk, scope, and verification evidence. Use before nontrivial implementation or after implementation to grade a dirty Git or Jujutsu working copy, named revision, or named paths against an accepted contract. Do not use to implement or simplify code.
+description: Define or audit a bounded code-change contract with observable acceptance criteria, preserved invariants, risk, scope, and verification evidence. Use before nontrivial implementation or after implementation to grade a dirty Git or Jujutsu working copy, named revision, or named paths against an accepted contract. Do not use to implement, debug, simplify, or perform an ordinary review without an accepted audit contract.
+metadata:
+  assurance-validation-status: "candidate"
+  assurance-eval-catalog: "evals/cases.jsonl"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -9,6 +12,13 @@ disable-model-invocation: true
 
 Separate **what must be true** from **how the code will make it true**. Use the smallest contract that makes
 implementation and review unambiguous.
+
+## Do not use when
+
+- The user asks to implement, debug, refactor, or simplify code rather than define or audit requirements.
+- The user requests an ordinary defect review without an accepted contract. Use `precision-review`; do not invent an
+  audit basis.
+- The change is purely mechanical and no material behavior, invariant, scope, risk, or verification decision exists.
 
 ## Select the mode
 
