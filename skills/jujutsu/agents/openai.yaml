@@ -1,6 +1,6 @@
 interface:
   display_name: "Jujutsu"
-  short_description: "Detect Jujutsu workspaces and use safe noninteractive jj workflows"
+  short_description: "Use safe noninteractive Jujutsu workflows"
   default_prompt: "Use $jujutsu to detect the active Jujutsu workspace and perform the requested VCS operation with explicit, verified jj commands."
 
 policy:

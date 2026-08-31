@@ -1,19 +1,7 @@
 interface:
   display_name: "Simplify Tests After Green"
-  short_description: "Audit green tests for high-value maintenance and fault-detection improvements"
-  default_prompt: >-
-    Use $simplify-tests-after-green to audit the user-requested test scope, or
-    the full repository test suite when no narrower scope is specified, and
-    make material simplifications while preserving useful fault detection and
-    diagnostics. Prioritize removing obsolete or semantically redundant tests,
-    brittle implementation coupling, unnecessary fixtures and infrastructure,
-    duplicated setup, and avoidable runtime or maintenance cost. Rank
-    candidates by expected test-suite quality and maintenance benefit. Treat
-    proof difficulty, semantic risk, and regression evidence as acceptance and
-    verification constraints, not as reasons to prefer the easiest duplicate
-    or smallest change. Do not restrict the audit to tests touched by the
-    current work unless the user explicitly requests that scope, and continue
-    until no material justified simplification remains in scope.
+  short_description: "Improve green tests without losing fault detection"
+  default_prompt: "Use $simplify-tests-after-green to audit the requested test scope, remove or refactor material maintenance liabilities, and preserve fault detection with discriminating evidence."
 
 policy:
   allow_implicit_invocation: false

@@ -1,7 +1,7 @@
 interface:
   display_name: "Profile-Guided Optimization"
-  short_description: "Optimize measured bottlenecks under correctness and resource guardrails"
-  default_prompt: "Use $profile-guided-optimization to define a representative workload, profile the bottleneck, change one cause, and keep or revert from comparable evidence."
+  short_description: "Optimize measured bottlenecks with verified evidence"
+  default_prompt: "Use $profile-guided-optimization to establish a representative baseline, profile the bottleneck, test one optimization at a time, and keep only changes supported by comparable evidence."
 
 policy:
   allow_implicit_invocation: true

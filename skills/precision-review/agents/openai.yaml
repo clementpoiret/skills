@@ -1,6 +1,6 @@
 interface:
   display_name: "Precision Review"
-  short_description: "Validate actionable diff defects and suppress unsupported review findings"
+  short_description: "Find validated defects in code changes"
   default_prompt: "Use $precision-review to recover change intent, trace affected contracts and consumers, and report only validated defects."
 
 policy:

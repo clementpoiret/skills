@@ -1,18 +1,7 @@
 interface:
   display_name: "Simplify After Green"
-  short_description: "Audit green production code for high-value maintainability simplifications"
-  default_prompt: >-
-    Use $simplify-after-green to audit the user-requested production-code scope,
-    or the full repository when no narrower scope is specified, and make
-    material behavior-preserving simplifications that improve codebase quality
-    and maintainability. Prioritize removing dead and legacy code, unnecessary
-    abstractions and indirection, duplication, redundant representations, and
-    other conceptual burden. Rank candidates by expected maintenance and
-    code-quality benefit. Treat semantic risk, blast radius, and regression
-    evidence as acceptance and verification constraints, not as reasons to
-    prefer the smallest, easiest, or safest change. Do not restrict the audit
-    to the current diff unless the user explicitly requests that scope, and
-    continue until no material justified simplification remains in scope.
+  short_description: "Improve green production code for maintainability"
+  default_prompt: "Use $simplify-after-green to audit the requested production-code scope, apply the highest-value justified behavior-preserving simplifications, and verify each change."
 
 policy:
   allow_implicit_invocation: false

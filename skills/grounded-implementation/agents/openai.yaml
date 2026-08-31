@@ -1,7 +1,7 @@
 interface:
   display_name: "Grounded Implementation"
-  short_description: "Implement nontrivial repository changes from local contracts and observed verification"
-  default_prompt: "Use $grounded-implementation to locate repository truth, implement the smallest coherent change, and verify every requirement."
+  short_description: "Implement nontrivial changes from verified requirements"
+  default_prompt: "Use $grounded-implementation to ground requirements in repository evidence, implement the smallest coherent change, and verify every obligation."
 
 policy:
   allow_implicit_invocation: true

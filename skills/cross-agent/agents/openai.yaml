@@ -1,6 +1,6 @@
 interface:
   display_name: "Cross-Agent"
-  short_description: "Run and reconcile an explicit independent Claude or Codex peer review"
+  short_description: "Run and reconcile independent peer analysis"
   default_prompt: "Use $cross-agent to preflight and run one independent read-only peer analysis, then verify and reconcile every material finding."
 
 policy:
