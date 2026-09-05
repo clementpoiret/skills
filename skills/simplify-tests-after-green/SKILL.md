@@ -2,8 +2,9 @@
 name: simplify-tests-after-green
 description: Simplify a green test suite by removing obsolete or redundant tests, reducing brittle implementation coupling, consolidating unnecessary setup and infrastructure, and improving fault-detection signal relative to maintenance and runtime cost. Audit the whole repository test suite unless the user specifies a narrower test scope. Use only after relevant behavior is stable and green and by explicit invocation. Do not use to fix failing behavior, weaken regression protection, simplify production code, or optimize product performance.
 metadata:
-  assurance-validation-status: assurance-eval-catalog
-  candidate: evals/cases.jsonl
+  assurance-validation-status: "candidate"
+  assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -22,6 +23,9 @@ and useful diagnostics are preserved.
 
 Proof difficulty, semantic risk, and ease of mutation are acceptance constraints. They are not the candidate-selection
 objective. Prefer the highest-value test-suite improvement that can be justified and verified.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Do not use when
 
@@ -330,6 +334,10 @@ observations and report representative values rather than unsupported percentage
 A successful pass ends when the requested scope has been audited and no additional **material, justified
 simplification** remains.
 
+Track inspected suites and candidate dispositions so a long session can resume without restarting the audit. Reuse
+fault-detection evidence while its relevant code, tests, fixtures, and environment remain unchanged. Once the scope and
+required final checks are covered, deliver the result; further mutation trials need a concrete unresolved fault class.
+
 Return `no-change` when:
 
 - the requested suite is already a clear and maintainable representation of its behavioral obligations;
@@ -353,6 +361,10 @@ Return `blocked` when the audit as a whole cannot proceed reliably because the b
 fixtures, or regression-detection mechanisms are inadequate.
 
 ## Final report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Status: optimized | no-change | blocked

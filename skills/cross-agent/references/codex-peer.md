@@ -12,8 +12,12 @@ codex exec --help
 ```
 
 Confirm support for the selected model, reasoning-effort configuration, ephemeral execution, sandbox, working-directory,
-and stdin behavior. Use an explicit user or repository selection when supplied. Otherwise use a supported stable
-default and report effective values only when observable.
+and stdin behavior. Honor an explicit user or repository selection; otherwise target `gpt-6-astra` when available.
+Validate model selection separately from flag support: accepting `--model` does not prove model entitlement. Keep the
+configured effort unless the task specifies another supported value. Report effective values only when observable.
+
+For GPT-6 Astra, keep the peer's review boundary explicit and allow a concise evidence report. A read-only peer should
+finish its assessment without offering to implement it or repeating checks whose results are already available.
 
 ## Read-only advisory command
 

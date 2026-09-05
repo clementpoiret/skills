@@ -67,7 +67,47 @@ P(success | same model, harness, task, budget, tools, no skill)
 - `counterfactual`: probes a tempting but invalid policy interpretation.
 
 Every skill has trigger, near-miss, procedure, and failure/escape coverage. Primary skills also include confusable and
-counterfactual cases. The current catalog contains 97 cases.
+counterfactual cases. Use `check-cases` to report the current catalog size.
+
+## GPT-6 Astra and Fable 5.1 trials
+
+Evaluate each target separately; a result on one model does not validate the other.
+
+| Host | Target model | Initial effort | Additional trials |
+| --- | --- | --- | --- |
+| Codex | `gpt-6-astra` | Preserve the configured supported setting | Sweep available levels only with a fixed workload and budget. |
+| Claude Code | `claude-fable-5-1` | Preserve the configured setting; otherwise `high` | Include lower effort for routine tasks and higher effort where quality warrants it. |
+
+Record the effective model identifier and host version from observable runtime evidence. A requested alias alone is
+insufficient to claim the target ran. Keep each effort/harness configuration in a separate results file: the current
+summarizer pairs by model, host, case, and trial and does not distinguish effort or harness versions. Record those
+settings and the skill revision in `notes`; never pool differing configurations into a paired result.
+
+Run the full catalog and the five executable fixtures, then pay particular attention to these cases:
+
+| Behavior | Cases | Evidence to inspect |
+| --- | --- | --- |
+| Authorized completion | `gi-authorized-follow-through`, `cc-settled-decisions`, `jj-existing-authorization` | Work proceeds through already authorized steps. |
+| Partial blockers | `gi-independent-obligations` | Independent work completes before a focused blocking question. |
+| Verification cost | `gi-final-state-checks`, `rd-existing-regression`, `sg-completed-scope`, `st-sensitivity-complete`, `pgo-target-met` | Required checks remain intact; repeated checks have a concrete cause. |
+| Scope and output | `pr-assessment-only`, `sg-user-budget`, `st-user-scope` | User scope is honored and evidence is concise. |
+| Oracle discipline | `sg-r3-missing-contract`, `sg-security-documented-basis`, `sg-no-evidence-budget`, `sgt-independent-obligations` | Scope completion and evidence limits remain explicit without artificial candidate quotas. |
+| Tool and peer behavior | `gi-independent-reads`, `ca-target-model-unavailable`, `ca-continue-primary-analysis` | Independent reads can batch; target models are observable; the reviewed target remains stable. |
+
+These cases express expected behavior, not recorded outcomes. Static validation and an isolated agent smoke test do not
+replace paired trials on both target models.
+
+### Host integration checks
+
+These checks apply only to custom API harnesses; skill text cannot configure the host or authenticate a model.
+
+- GPT-6 Astra tool calls require Responses. Confirm the adapter's actual endpoint and supported parameters before
+  model trials. See [OpenAI's migration guidance](https://developers.openai.com/api/docs/guides/latest-model#migration-quickstart).
+- For Fable 5.1, preserve API conversation history as returned and use supported compaction. Do not splice old thinking
+  blocks into edited histories. Confirm how the client exposes progress updates and supports tool selection. See
+  [Anthropic's migration guide](https://platform.claude.com/docs/en/models/fable-5-1/migration-guide).
+- Keep host policies and permissions fixed across arms. A missing provider connection, model entitlement, or tool is an
+  environment limitation, never a successful model trial. Do not route around a refusal or silently switch models.
 
 ## Executable fixtures
 
@@ -250,4 +290,4 @@ Before declaring a skill effective, expanding implicit scope, or removing a fail
 7. negative and null results are retained and reported;
 8. the observed evidence is linked to the skill revision.
 
-Do not claim GPT-5.6 Sol or Claude Opus 5 benefit from these files until matched trials support that claim.
+Do not claim GPT-6 Astra or Claude Fable 5.1 benefit from these files until matched trials support that claim.

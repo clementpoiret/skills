@@ -4,6 +4,7 @@ description: Ask the other local coding agent—Claude from Codex or Codex from 
 metadata:
   assurance-validation-status: "candidate"
   assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -15,6 +16,9 @@ authority, vote, or replacement for verification.
 
 Honor repository data-handling policy. Do not send secrets or unrelated sensitive content. Never allow the peer to
 invoke `cross-agent`, another delegation or orchestration skill, subagents, agent teams, or another external agent.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Do not use when
 
@@ -47,7 +51,8 @@ commit, or remote.
 1. In a Jujutsu workspace, use the primary's `jujutsu` skill for read-only VCS inspection. Otherwise use read-only Git
    inspection, including in-scope tracked and untracked changes.
 1. Record in-scope paths and unrelated existing edits.
-1. Do not edit the working copy while the peer process is live.
+1. Keep the peer's target stable while its process is live. Continue independent analysis or preparation that cannot
+   change the target; wait only when the next useful action depends on the peer.
 1. After the peer returns, re-read the affected files and diff. If the target changed materially, label the report
    stale; run a fresh peer only when the target has materially changed or the user explicitly requests another pass.
 
@@ -61,9 +66,11 @@ Before constructing a command, observe:
 - whether outbound network access is permitted;
 - whether required peer skills are discoverable and compatible with the restricted tool surface.
 
-Do not hardcode a model or effort that the installed CLI does not support. User and repository selections take
-precedence. Otherwise use the strongest stable selection available under current host policy, and record requested and
-effective values separately. Never claim an effective model or effort without observable support.
+User and repository model selections take precedence. Otherwise target GPT-6 Astra (`gpt-6-astra`) for a Codex peer and
+Claude Fable 5.1 (`claude-fable-5-1`) for a Claude peer, subject to observed CLI support, entitlement, and host policy.
+Do not substitute a moving alias or another model silently when the target is unavailable; report the limitation and
+continue primary work. Respect existing effort settings; choose supported defaults when none is set, and record
+requested and effective values separately. Equal effort labels do not establish equivalent work across models.
 
 Read the host-specific invocation reference only after identifying the peer:
 
@@ -138,6 +145,7 @@ Required skills: <already explicitly invoked, or none>
 Observed evidence: <commands and results, or none>
 Known constraints and unknowns: <context>
 
+Complete this bounded analysis and return its findings without asking whether to start.
 Inspect the target directly. Prioritize material defects over style preferences. For every
 finding, cite a path and line or symbol, explain a concrete failure mode, and distinguish
 observation from inference. Do not claim a check passed unless you observed it or its result
@@ -171,6 +179,10 @@ Reject unsupported severity, style-only churn, speculative abstractions, finding
 that conflict with accepted policy. Preserve legitimate disagreement instead of forcing consensus.
 
 ## Report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Peer: <Claude or Codex>

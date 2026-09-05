@@ -5,6 +5,7 @@ compatibility: Intended for Codex and Claude Code sessions that can inspect auth
 metadata:
   assurance-validation-status: "unvalidated-candidate"
   assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -13,6 +14,9 @@ disable-model-invocation: false
 
 Create an independent executable oracle from authoritative behavior. The current implementation and existing tests are
 candidate evidence, not the source of truth.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Applicability
 
@@ -153,6 +157,9 @@ Implement one obligation or failure mechanism at a time:
    than the obligation.
 6. Run the focused test immediately and inspect why it passed or failed.
 
+Use existing test files and helpers where suitable. Create a new file only for a distinct test boundary or repository
+convention. Sensitivity probes may remain temporary; permanent tests should protect the requested obligations.
+
 When several cases share one obligation and boundary, use a readable named table. Keep materially different boundaries or
 failure mechanisms separate even when they concern the same feature.
 
@@ -174,7 +181,7 @@ For every new failure, classify it before changing anything:
 
 - **product defect** → test matches the frozen requirement; report the defect without repairing production code;
 - **test defect** → oracle, setup, fixture, or isolation is wrong; repair the test;
-- **specification ambiguity** → stop and identify the decision required;
+- **specification ambiguity** → defer the affected oracle, complete unambiguous obligations, and identify the decision;
 - **environment failure** → repair or bound the environment before interpreting behavior;
 - **non-discriminating test** → strengthen or remove the test rather than count it as coverage.
 
@@ -195,6 +202,9 @@ applicable:
 7. No disabled assertion, unconditional skip, source-text fingerprint, current-output snapshot, or implementation-derived
    expected value substitutes for a behavioral oracle.
 8. Residual false-positive, flakiness, environment, and oracle risks are stated precisely.
+
+Reuse checks already observed on the final test state. Additional testing must address a named gap; do not keep adding
+equivalent cases or rerunning successful mutation checks after sensitivity and required repository gates are established.
 
 A valid outcome may be `tests-added`, `defect-exposed`, `partial`, or `blocked`. Do not force all tests green when the
 explicit purpose is to expose a specification violation without changing production code.
@@ -231,6 +241,10 @@ Return the obligations inspected, evidence obtained, exact oracle gap, and safes
 rather than manufacture certainty.
 
 ## Final report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Status: tests-added | defect-exposed | partial | blocked

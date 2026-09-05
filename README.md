@@ -6,6 +6,29 @@ Codex and Claude Code. The library encodes narrow execution policies rather than
 Every skill must be able to abstain. Generated or edited skills remain candidates until paired evaluation demonstrates
 positive marginal value over the no-skill baseline.
 
+## GPT-6 Astra and Claude Fable 5.1
+
+These skills target GPT-6 Astra in Codex and Claude Fable 5.1 in Claude Code. The shared procedures keep requirements,
+evidence, scope, and completion explicit. Model selection belongs to the host; loading a skill does not switch models.
+`cross-agent` names both peer targets and checks their availability before use.
+
+The prompt updates address unnecessary approval pauses, excessive verification, and instruction conflicts described in
+[OpenAI's GPT-6 guidance](https://developers.openai.com/api/docs/guides/latest-model#prompting-best-practices). They also
+address task completion, independent tool batching, and targeted file edits described in
+[Anthropic's Fable 5.1 guidance](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1).
+Sources reviewed on 2026-09-04; this is a design basis, not measured proof of improvement.
+
+- Carry out authorized work through the requested deliverable; a blocked obligation should not stop independent work.
+- Preserve the user's scope and output preferences. Report decisive evidence without reproducing every internal ledger.
+- Reuse verification evidence for unchanged state and add checks for a concrete obligation or unresolved risk.
+- Use the host's available tools and permissions. Batch independent reads; keep dependent mutations and measurements
+  ordered. Cross-provider peer work still requires explicit `cross-agent` invocation.
+- During long tasks, give brief progress updates. At a compaction boundary, preserve scope, decisions, exact targets,
+  observed checks, unresolved obligations, and the next action in the host's supported continuation summary.
+
+Use existing host effort settings as a baseline. Sweep effort independently for each model; equal labels are not equal
+compute. See [EVALS.md](EVALS.md) for the target matrix and model-specific checks. No paired model trials are included.
+
 ## Library
 
 | Skill                                                                              | Primary job                                                                                                                                                              | Invocation            |
@@ -16,13 +39,13 @@ positive marginal value over the no-skill baseline.
 | [`specification-grounded-testing`](skills/specification-grounded-testing/SKILL.md) | Build tests or executable verifiers from authoritative requirements and validate both sensitivity and false-positive risk independently of the current implementation.   | Automatic or explicit |
 | [`profile-guided-optimization`](skills/profile-guided-optimization/SKILL.md)       | Improve measured performance or resource use from a representative baseline, profile evidence, one bottleneck change, and keep-or-revert verification.                   | Automatic or explicit |
 | [`change-contract`](skills/change-contract/SKILL.md)                               | Explicitly define observable `AC-*` acceptance criteria and `INV-*` invariants, or audit a target against an already accepted contract.                                  | Explicit only         |
-| [`simplify-after-green`](skills/simplify-after-green/SKILL.md)                     | Remove at most one unnecessary production-code concept after credible green evidence, preserving accepted behavior.                                                      | Explicit only         |
+| [`simplify-after-green`](skills/simplify-after-green/SKILL.md)                     | Audit the requested green production scope and apply justified simplifications while preserving accepted behavior.                                                        | Explicit only         |
 | [`simplify-tests-after-green`](skills/simplify-tests-after-green/SKILL.md)         | Reduce green-suite maintenance or runtime cost only when discriminating evidence preserves fault detection and diagnostics.                                              | Explicit only         |
 | [`cross-agent`](skills/cross-agent/SKILL.md)                                       | Obtain one independent Claude/Codex peer analysis, then verify and reconcile every material finding.                                                                     | Explicit only         |
 | [`jujutsu`](skills/jujutsu/SKILL.md)                                               | Detect active Jujutsu workspaces and use safe, noninteractive, version-aware `jj` workflows.                                                                             | Automatic or explicit |
 
-The original five procedures remain intact except for compact anti-applicability and validation metadata. Five primary
-task-family skills now cover implementation, debugging, review, test-oracle construction, and measured optimization.
+Five primary task-family skills cover implementation, debugging, review, test-oracle construction, and measured
+optimization. Explicit procedures cover contracts, simplification, and independent peers; Jujutsu handles VCS mechanics.
 
 ## Routing and composition
 

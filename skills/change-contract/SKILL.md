@@ -4,6 +4,7 @@ description: Define or audit a bounded code-change contract with observable acce
 metadata:
   assurance-validation-status: "candidate"
   assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -12,6 +13,9 @@ disable-model-invocation: true
 
 Separate **what must be true** from **how the code will make it true**. Use the smallest contract that makes
 implementation and review unambiguous.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Do not use when
 
@@ -108,7 +112,14 @@ A test name alone is not evidence. State what the check proves and what it does 
 Mark the contract `blocked` only when an unresolved decision could materially change behavior, scope, risk, or
 verification. Otherwise choose the narrowest safe interpretation, label it as an assumption, and continue.
 
+Use answers and authorizations already present in the conversation. Finish criteria that do not depend on an open
+decision. Delivering a draft does not require another permission round; distinguish the draft from a user-accepted
+contract without asking the user to reconfirm settled requirements.
+
 ### Define output
+
+Use these fields as a compact checklist and follow the user's format. Preserve criterion identifiers and verification
+requirements. During long work, report progress briefly; the final contract should stand on its own.
 
 ```text
 Status: ready | draft | blocked

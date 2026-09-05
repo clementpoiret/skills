@@ -25,7 +25,8 @@ Before invocation, record enough information to detect material change without r
 - read-only status/diff summary or hashes of named artifacts;
 - unrelated edits that must remain untouched.
 
-Do not edit the target while a process is live. Re-observe the target after completion.
+Do not edit the target while a process is live. Independent primary analysis may continue without changing that target.
+Re-observe the target after completion.
 
 ## Retry boundary
 

@@ -2,8 +2,9 @@
 name: simplify-after-green
 description: Simplify green production code by removing dead or legacy code, redundant abstractions, duplication, unnecessary indirection, obsolete compatibility machinery, and other maintenance burden while preserving accepted behavior, interfaces, security, compatibility, concurrency, performance, and operational properties. Audit the whole repository unless the user specifies a narrower production-code scope. Use only after relevant checks are green and by explicit invocation. Do not use to fix failures, add behavior, redesign the system, simplify tests, or pursue measured performance optimization.
 metadata:
-  assurance-validation-status: assurance-eval-catalog
-  candidate: evals/cases.jsonl
+  assurance-validation-status: "candidate"
+  assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -21,6 +22,9 @@ that the codebase is easier to understand, modify, and maintain.
 Semantic risk, blast radius, and regression evidence are acceptance and verification constraints. They are not the
 primary candidate-selection objective. Prefer the highest-value maintainability improvement that can be justified and
 verified.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Do not use when
 
@@ -210,7 +214,7 @@ cleanup. Investigate enough to make a sound decision within the requested scope.
 
 ## Edit and validate
 
-1. Make one reversible conceptual change at a time.
+1. Make one reversible conceptual change at a time, with targeted edits to existing files where practical.
 1. Preserve accepted behavior, public names, schemas, compatibility, security properties, operational properties, and
    test strength unless the accepted contract explicitly permits change.
 1. Run the smallest discriminating checks after each conceptual change.
@@ -262,6 +266,10 @@ Verify every finding before acting.
 A successful pass ends when the requested scope has been audited and no additional **material, justified,
 behavior-preserving simplification** remains.
 
+Track which components and candidates have been inspected. Revisit them only when later edits or new evidence affect
+their assessment. Reuse final-state verification results rather than repeating a completed pass, and honor any smaller
+scope or budget the user supplied. Do not expand this pass into another subsystem after its requested scope is covered.
+
 Return `no-change` when the scope was adequately audited but:
 
 - the only opportunities are stylistic, cosmetic, or line-count reductions;
@@ -286,6 +294,10 @@ Return `blocked` when the audit as a whole cannot proceed safely because the beh
 isolation, or required regression detection is inadequate.
 
 ## Final report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Status: simplified | no-change | blocked

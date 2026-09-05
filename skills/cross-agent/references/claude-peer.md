@@ -18,10 +18,14 @@ Select the model and effort from, in order:
 
 1. explicit user request;
 2. applicable repository policy;
-3. an installed, entitled stable default shown by current CLI configuration or documentation.
+3. `claude-fable-5-1`, after confirming installed support and entitlement.
 
 Do not assume a moving alias resolves to a particular model. Report the requested identifier and any effective
 identifier the CLI exposes.
+
+For Fable 5.1, retain configured effort; absent a selection, start with its supported default (`high`). Evaluate other
+levels separately instead of mapping GPT effort labels onto Claude. If the target is unavailable, report it without
+silently falling back. Batch independent file reads where supported and keep the requested final report concise.
 
 ## Read-only advisory command
 

@@ -5,6 +5,7 @@ compatibility: Intended for Codex and Claude Code sessions that can inspect repo
 metadata:
   assurance-validation-status: "unvalidated-candidate"
   assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -13,6 +14,9 @@ disable-model-invocation: false
 
 Optimize observed bottlenecks, not plausible code. Keep a change only when comparable measurements show useful
 improvement without violating correctness or resource guardrails.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Applicability
 
@@ -215,7 +219,8 @@ rather than creating a flaky merge gate.
 
 ## 8. Run the completion gate
 
-Re-read the performance contract, inspect the final diff, and rerun from a stable state. Require, as applicable:
+Re-read the performance contract and inspect the final diff. Reuse comparable measurements already taken on the final
+state; rerun when code, workload, environment, or unresolved variance requires it. Require, as applicable:
 
 1. exact baseline and final workload commands, environment, and raw observations are recorded;
 2. the primary target or keep/revert rule is satisfied;
@@ -229,6 +234,10 @@ Re-read the performance contract, inspect the final diff, and rerun from a stabl
 
 A valid result may be `optimized`, `no-change`, `measurement-only`, or `blocked`. A no-change result is preferable to
 retaining complexity without distinguishable value.
+
+When the stated target is met and guardrails pass, finish instead of searching for another optimization. For an open
+target, stop when the agreed measurement budget is spent or remaining candidates lack justified value. Run benchmarks
+without concurrent resource-heavy checks that would contaminate their measurements.
 
 ## Failure signatures and diagnostic actions
 
@@ -266,6 +275,10 @@ Return the baseline, workload limitation, profile evidence, rejected hypotheses,
 force an optimization patch.
 
 ## Final report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Status: optimized | no-change | measurement-only | blocked

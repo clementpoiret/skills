@@ -5,6 +5,7 @@ compatibility: Intended for Codex and Claude Code sessions with repository read/
 metadata:
   assurance-validation-status: "unvalidated-candidate"
   assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -13,6 +14,9 @@ disable-model-invocation: false
 
 Implement from authoritative requirements and repository-local truth. Treat code, tests, remembered framework behavior,
 and generated assumptions as evidence to inspect, not as the requirement oracle.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Applicability
 
@@ -84,8 +88,9 @@ If an accepted `AC-*`/`INV-*` contract exists, use it unchanged and map directly
 current user-approved requirement and applicable repository policy, record the conflict, and do not silently use current
 implementation behavior as the tie-breaker.
 
-If an unresolved choice could materially change public behavior, compatibility, security, data, or verification, stop
-and report the exact decision needed. Otherwise choose the narrowest reversible interpretation and label it.
+Reuse decisions and authorization already established by the user. If an unresolved choice could materially
+change public behavior, compatibility, security, data, or verification, pause only the dependent work and report the
+decision needed after completing independent obligations. Otherwise choose the narrowest reversible interpretation.
 
 ## 2. Establish the repository baseline
 
@@ -128,6 +133,9 @@ Apply these observation-dependent rules:
 Stop retrieving when the evidence supports the next implementation decision. Do not dump whole files or repository
 history merely because they are available.
 
+Batch independent file reads and searches when the host supports it. Resolve missing paths and versions before commands
+that depend on them; serialize edits and checks that share mutable state.
+
 ## 4. Choose the smallest coherent design
 
 Map each obligation to the narrowest change surface and verification method. Prefer existing architecture, naming,
@@ -148,7 +156,7 @@ revise the plan. Do not continue by accretion.
 
 ## 5. Implement transactionally
 
-1. Make one coherent conceptual batch at a time.
+1. Make one coherent conceptual batch at a time, using targeted edits when most of a file stays unchanged.
 2. Inspect the diff immediately after each batch and remove accidental scope.
 3. Run the cheapest discriminating check after each meaningful edit: parser/formatter, compile/type check, focused test,
    or a direct runtime probe appropriate to the failure mode.
@@ -158,6 +166,9 @@ revise the plan. Do not continue by accretion.
 Add tests from the authoritative obligation ledger, not by copying the implementation. Prefer the cheapest test level
 that can reproduce the behavior and fail for the intended reason. Add negative or boundary cases when omission would
 leave a material requirement unverified.
+
+Extend suitable existing tests. Keep temporary exploration probes out of the committed suite unless they protect a
+required behavior or satisfy repository conventions. Do not add adjacent features or fix unrelated baseline defects.
 
 ## 6. Run the completion gate
 
@@ -178,6 +189,9 @@ Require, as applicable:
 
 Use the cheapest discriminating checks during iteration. Run broader acceptance and regression checks once the patch is
 stable. Do not mechanically run every tool when it cannot distinguish a relevant failure.
+
+Reuse observed results for the same final code and environment. Once the required gates pass, repeat or broaden checks
+only for a new edit, failure, or concrete unresolved risk; then finish the requested deliverable.
 
 Success requires observable evidence. When a required check cannot run, report `partial` or `blocked`; do not say the
 implementation is complete merely because the code appears correct.
@@ -209,10 +223,14 @@ Abandon or narrow this procedure when:
 - local evidence contradicts the assumed framework, version, architecture, or generated-code model;
 - the patch cannot remain coherent without an unapproved compatibility, data, security, or scope decision.
 
-Return the evidence obtained, the exact unresolved decision, and the safest next action. Do not force a nominal
-implementation result.
+Leaving this procedure does not cancel the task. Complete all independent authorized work, then report the evidence
+obtained and the exact blocked obligation. Do not force a nominal implementation result.
 
 ## Final report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Status: complete | partial | blocked

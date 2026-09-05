@@ -1,10 +1,11 @@
 ---
 name: reproduction-first-debugging
-description: Use when diagnosing and fixing a reported bug, failing test, runtime exception, regression, flaky behavior, or incorrect output: reproduce before editing, test competing hypotheses with discriminating experiments, patch the root cause minimally, and prove the fix. Do not use for greenfield feature implementation, read-only review, known mechanical edits, test-only verification, or general optimization of already-correct behavior.
+description: "Use when diagnosing and fixing a reported bug, failing test, runtime exception, regression, flaky behavior, or incorrect output: reproduce before editing, test competing hypotheses with discriminating experiments, patch the root cause minimally, and prove the fix. Do not use for greenfield feature implementation, read-only review, known mechanical edits, test-only verification, or general optimization of already-correct behavior."
 compatibility: Intended for Codex and Claude Code sessions that can inspect the repository and run at least the failing or nearest relevant command when available.
 metadata:
   assurance-validation-status: "unvalidated-candidate"
   assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -13,6 +14,9 @@ disable-model-invocation: false
 
 Convert a failure report into observations before changing production code. Debug through falsifiable hypotheses, not a
 sequence of plausible patches.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Applicability
 
@@ -95,7 +99,8 @@ Use progressive retrieval. Stop once the next experiment can discriminate among 
 
 ## 4. Form competing hypotheses
 
-Unless one cause is already deterministic from direct evidence, write at least two plausible hypotheses. For each, state:
+When evidence leaves competing causes, compare them with a discriminating experiment. A deterministic cause established
+by direct evidence does not need an invented competitor. For each live hypothesis, retain:
 
 ```text
 H1: <candidate mechanism>
@@ -145,6 +150,9 @@ Do not expand a local bug fix into an unbounded concurrency, performance, or sec
 Patch only after evidence connects the responsible mechanism to the failure. Prefer the earliest boundary that can enforce
 the required invariant without duplicating checks across callers.
 
+Once the repair is supported and within the requested scope, apply it without another approval round. Prefer a targeted
+edit over rewriting an otherwise unchanged file. Leave unrelated defects for the final report.
+
 Before accepting the patch, confirm:
 
 - it explains why the original failure occurred;
@@ -161,6 +169,9 @@ hypothesis set, and re-localize from the preserved failure evidence.
 Create the cheapest stable check that fails on the original defect and passes on the fix. Derive its oracle from the
 approved behavior, not from the patched implementation.
 
+Reuse or strengthen an existing regression test where it covers the defect. Keep diagnostic probes temporary unless
+they provide lasting regression protection; a new test file is needed only when no suitable existing home exists.
+
 Prefer, in order of fit:
 
 - the minimized failing test or input;
@@ -174,7 +185,8 @@ dirty working copy; use a temporary copy, isolated workspace, known-bad revision
 
 ## 9. Verify the repair
 
-Run in this order:
+Run the original reproduction first, then the applicable checks below. One command may cover several obligations;
+count the observed result once instead of rerunning it under each heading:
 
 1. the original reproduction with the same relevant environment and input;
 2. the new or strengthened regression check;
@@ -185,6 +197,9 @@ Run in this order:
 
 A passing new test is insufficient if the original reproduction was not rerun. A passing original case is insufficient if
 adjacent valid behavior regressed.
+
+After the required checks pass on the final patch, finish. Repeat or broaden verification only for a new edit, failure,
+or concrete remaining concern.
 
 ## Failure signatures and diagnostic actions
 
@@ -217,6 +232,10 @@ Return the preserved reproduction, rejected hypotheses, remaining uncertainty, a
 needed. Do not force a patch.
 
 ## Final report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Status: fixed | investigation-only | blocked

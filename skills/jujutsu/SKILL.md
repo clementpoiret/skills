@@ -4,6 +4,7 @@ description: Detect Jujutsu repositories and use safe, noninteractive `jj` workf
 metadata:
   assurance-validation-status: "candidate"
   assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 allowed-tools: Bash(jj *)
 user-invocable: true
 disable-model-invocation: false
@@ -12,6 +13,9 @@ disable-model-invocation: false
 # Jujutsu (`jj`) Version Control
 
 Use this skill whenever the current directory is inside a Jujutsu workspace, even when the user does not mention `jj`.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Do not use when
 
@@ -55,6 +59,10 @@ When `jj root` succeeds:
 
 Do not push, fetch, create or move tags, delete remote references, abandon published work, rewrite immutable history,
 create or remove workspaces, or persist configuration unless the user authorized that class of action.
+
+Authorization may already be explicit or follow from the requested workflow. Reuse it rather than asking again before
+each step. When an action needs a new decision, complete permitted inspection and preparation first, then identify the
+exact operation and unresolved choice. Tool or model capability alone does not authorize a repository mutation.
 
 ## 3. Use agent-safe commands
 
@@ -196,6 +204,10 @@ Do not load every reference for a simple status or diff request.
 
 After every mutation, inspect the relevant state:
 
+Choose the commands that establish the requested postcondition; the examples below are not a mandatory three-command
+sequence for every operation. Keep mutations and state inspection ordered: even nominally read-only `jj` commands can
+snapshot the working copy, so do not batch them with edits to the same workspace.
+
 ```bash
 jj --no-pager --color=never status
 jj --no-pager --color=never log -r '::@' -n 20
@@ -214,6 +226,10 @@ push, require a dry run, inspect the selected references, then verify local and 
 Never claim a mutation succeeded from exit status alone when the resulting repository state was not inspected.
 
 ## Final report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Repository: <jj root>

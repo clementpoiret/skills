@@ -296,12 +296,21 @@ class RepositoryRegressionTests(unittest.TestCase):
             "skills/simplify-after-green/SKILL.md",
         ):
             text = (REPO_ROOT / relative).read_text(encoding="utf-8")
-            self.assertIn("does not invoke `cross-agent` itself", text)
-            self.assertIn("`$cross-agent`", text)
-            self.assertIn("`/cross-agent`", text)
+            # Examples must support both hosts; prose and Markdown styling can vary.
+            self.assertIn("$cross-agent $", text)
+            self.assertIn("/cross-agent /", text)
+        frontmatter, issues = self.validator.parse_frontmatter(REPO_ROOT / "skills/cross-agent/SKILL.md")
+        self.assertEqual([], issues)
+        self.assertTrue(self.validator.parse_bool(frontmatter["disable-model-invocation"]))
 
     def test_readme_describes_the_actual_invocation_policy(self) -> None:
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        rows = {
+            cells[0].strip("`"): cells[1:]
+            for line in readme.splitlines()
+            if line.startswith("|")
+            and len(cells := [cell.strip() for cell in line.strip("|").split("|")]) == 3
+        }
         for skill in (
             "grounded-implementation",
             "profile-guided-optimization",
@@ -310,9 +319,9 @@ class RepositoryRegressionTests(unittest.TestCase):
             "specification-grounded-testing",
             "jujutsu",
         ):
-            self.assertIn(f"| `{skill}` | Automatic or explicit | Automatic or explicit |", readme)
+            self.assertEqual(["Automatic or explicit", "Automatic or explicit"], rows[skill])
         for skill in ("change-contract", "cross-agent", "simplify-after-green", "simplify-tests-after-green"):
-            self.assertIn(f"| `{skill}` | Explicit only | Explicit only |", readme)
+            self.assertEqual(["Explicit only", "Explicit only"], rows[skill])
         self.assertIn("select at most one\nprimary task-family skill", readme)
 
     def test_grounded_implementation_has_local_truth_and_completion_gates(self) -> None:
@@ -416,20 +425,6 @@ class RepositoryRegressionTests(unittest.TestCase):
         )
         for reference in references:
             self.assertIn(f"references/{reference}", text)
-
-    def test_production_simplification_has_risk_and_search_budgets(self) -> None:
-        text = (REPO_ROOT / "skills" / "simplify-after-green" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertRegex(text, r"For\s+`R2` or `R3`, require an explicit accepted contract")
-        self.assertIn("inspect no more than three plausible candidates", text)
-        self.assertIn("choose at most one conceptual removal", text)
-
-    def test_test_simplification_has_safe_discriminators_and_budgets(self) -> None:
-        text = (REPO_ROOT / "skills" / "simplify-tests-after-green" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("use at most three narrowly scoped mutants", text)
-        self.assertIn("a temporary mutation in an isolated workspace or temporary copy", text)
-        self.assertIn("an inline inverse-edit mutation only when", text)
-        self.assertIn("retain the test rather than exhaust the budget", text)
-
 
 if __name__ == "__main__":
     unittest.main()

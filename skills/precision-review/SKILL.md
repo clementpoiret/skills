@@ -5,6 +5,7 @@ compatibility: Intended for Codex and Claude Code sessions with repository and d
 metadata:
   assurance-validation-status: "unvalidated-candidate"
   assurance-eval-catalog: "evals/cases.jsonl"
+  assurance-target-models: "gpt-6-astra, claude-fable-5-1"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -13,6 +14,9 @@ disable-model-invocation: false
 
 Review for defects that can be explained and supported. A valid no-findings result is better than speculative commentary.
 Remain read-only unless the user separately asks to implement accepted fixes.
+
+Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
+complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
 
 ## Applicability
 
@@ -104,6 +108,9 @@ Apply these observation-dependent rules:
 
 Stop retrieving when each suspected issue can be validated or rejected.
 
+Batch independent reads and searches where supported. Resolve unfamiliar or changing dependency claims from the actual
+version and authoritative documentation, including the exact identifier in searches; recognition alone is not evidence.
+
 ## 4. Recover changed contracts and invariants
 
 State what the patch changes and what must remain true. Pay particular attention to:
@@ -192,6 +199,10 @@ Every finding must include:
 Order findings by severity, then confidence. Do not add a summary finding that duplicates detailed findings. If no
 supported findings remain, say so and list the evidence inspected and any unverified area.
 
+Finish once the requested target is covered and material suspicions are resolved or explicitly limited. Do not expand
+into another audit or repeatedly run a passing check to fill a findings quota. A request for assessment authorizes the
+assessment; apply fixes only when the user also requests them.
+
 ## Failure signatures and diagnostic actions
 
 - **A finding depends on an unknown framework version** → inspect manifest, lockfile, local types, or resolved source;
@@ -221,6 +232,10 @@ Return `blocked` or a limited review rather than speculative findings when:
 State what was inspected, what could not be established, and the next evidence needed.
 
 ## Report
+
+Use the fields below as an evidence checklist. Match the user's requested format and summarize only relevant fields;
+retain exact checks, material limitations, and any required per-criterion grades. Give brief progress updates during
+long work, and make the final response understandable without reading tool output.
 
 ```text
 Target: <diff/revision/working copy and comparison basis>
