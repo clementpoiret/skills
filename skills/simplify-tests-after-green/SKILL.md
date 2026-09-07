@@ -14,15 +14,11 @@ disable-model-invocation: true
 Improve the maintainability, clarity, diagnostic quality, and efficiency of an already-green test suite while preserving
 the behavioral obligations it protects.
 
-Optimize **fault-detection value relative to maintenance, brittleness, and runtime cost**.
-
-Fewer tests are not inherently better. A smaller or simpler suite is valuable only when meaningful regression detection
-and useful diagnostics are preserved.
-
-**Do not optimize for the easiest or safest test to delete.**
-
-Proof difficulty, semantic risk, and ease of mutation are acceptance constraints. They are not the candidate-selection
-objective. Prefer the highest-value test-suite improvement that can be justified and verified.
+Optimize fault-detection value relative to maintenance, brittleness, and runtime cost. Fewer tests are not inherently
+better: a smaller or simpler suite is valuable only when meaningful regression detection and useful diagnostics are
+preserved. Rank candidates by the maintenance liability they remove, not by how easy they are to delete or prove
+redundant; proof difficulty, semantic risk, and ease of mutation decide whether a valuable candidate can be applied, not
+which candidate to prefer. Audit the whole requested scope before finishing.
 
 Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
 complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
@@ -49,8 +45,7 @@ The user's requested scope is authoritative.
 - Keep production behavior and production code unchanged except for temporary, safely reversible discriminating
   mutations used to prove fault detection.
 
-For a large suite, inspect it systematically by package, subsystem, boundary, fixture family, or test layer. Do not stop
-because one easy duplicate has already been found.
+For a large suite, inspect it systematically by package, subsystem, boundary, fixture family, or test layer.
 
 ## Preconditions
 
@@ -110,13 +105,7 @@ A test refactor may add or rewrite assertions when necessary to replace brittle 
 behavioral evidence. The goal is preservation or improvement of useful fault detection, not preservation of the existing
 test implementation.
 
-Do not optimize for:
-
-- line count;
-- raw test count;
-- coverage percentage;
-- ease of deletion;
-- ease of proving a trivial duplicate.
+Line count, raw test count, and coverage percentage are diagnostics, not objectives.
 
 Do not create:
 
@@ -128,10 +117,7 @@ Do not create:
 
 ## Audit and candidate selection
 
-Audit the requested scope before deciding the pass is complete.
-
-Identify material test-suite liabilities throughout that scope. Do not impose an arbitrary maximum number of candidates
-and do not stop after the first test whose removal is easy to prove.
+Identify material test-suite liabilities throughout the requested scope.
 
 Rank candidates primarily by expected test-suite quality benefit:
 
@@ -144,19 +130,9 @@ Rank candidates primarily by expected test-suite quality benefit:
 1. diagnostics or readability improved;
 1. ownership of behavioral obligations clarified.
 
-Then determine whether each candidate preserves sufficient fault-detection evidence.
-
-Proof difficulty, mutation convenience, semantic risk, and blast radius are **verification constraints**, not the
-primary ranking criteria.
-
-Do not delete an insignificant exact duplicate and stop merely because it is easy to prove redundant when a materially
-more valuable simplification elsewhere in the requested scope can also be justified.
-
-When candidates provide comparable maintenance value, prefer stronger evidence, lower semantic risk, and clearer
-diagnostics.
-
-A candidate that cannot be proven redundant or safely refactored should be retained or reported. Continue auditing the
-rest of the requested scope.
+Then determine whether each candidate preserves sufficient fault-detection evidence. When candidates provide comparable
+maintenance value, prefer stronger evidence, lower semantic risk, and clearer diagnostics. A candidate that cannot be
+proven redundant or safely refactored is retained or reported as unresolved.
 
 ## Map tests to obligations
 
@@ -225,8 +201,6 @@ Do not treat any of the following as sufficient proof by itself:
 | The test is flaky                     | Flakiness is a debugging problem, not deletion evidence.                               |
 | Parameterization is shorter           | Verify that setup, obligation, readability, and diagnostics remain coherent.           |
 | Fewer tests must be faster            | Measure when runtime improvement is claimed; runner and fixture overhead may dominate. |
-| This one is easiest to remove         | Ease of removal is not a quality criterion.                                            |
-| The exact duplicate is obviously safe | Remove it if useful, but continue auditing for more material opportunities.            |
 
 ## Proof gate for deletion, merging, or replacement
 
@@ -267,8 +241,7 @@ Before applying each conceptual test change:
 
 Unchanged coverage is not proof of unchanged test strength.
 
-If a candidate cannot be proved safely, retain that candidate or report it as unresolved. Do not terminate the whole
-simplification pass unless the same evidence problem makes the remaining requested scope unreliable.
+If a candidate cannot be proved safely, retain it or report it as unresolved.
 
 ## Presumptively distinct evidence
 
@@ -301,8 +274,6 @@ Diagnose or stabilize flakiness under a separate debugging scope, or retain the 
 Apply every material test-suite simplification in the requested scope that has adequate fault-detection evidence and
 produces a clearer or cheaper justified suite, unless the user explicitly requests a narrower budget.
 
-Do not constrain the pass to one removal or one conceptual batch.
-
 Make changes sequentially so their effect remains attributable:
 
 1. apply one coherent conceptual change;
@@ -321,7 +292,6 @@ Prefer coherent reductions of a maintenance liability over isolated cosmetic edi
 1. Run the smallest discriminating checks after each conceptual change.
 1. Revert or revise when fault detection, isolation, behavior, or clarity becomes uncertain.
 1. Remove test helpers or infrastructure made dead by a justified simplification when they have no other consumers.
-1. Continue until no material justified simplification remains in the requested scope.
 1. Inspect the final diff for unintended production or behavioral changes.
 1. Rerun every baseline command and broader repository-required checks appropriate to affected fixtures and boundaries.
 1. Do not invoke another skill or peer automatically. Additional review is a separate explicit choice.
@@ -353,9 +323,6 @@ Retain or report an individual candidate when:
 - the candidate protects a unique obligation or boundary;
 - unrelated working-copy edits prevent safe mutation or restoration;
 - simplification would require changing production behavior or an accepted contract.
-
-An unresolved candidate does not terminate the full audit unless the underlying baseline or fixture problems invalidate
-analysis of the remaining scope.
 
 Return `blocked` when the audit as a whole cannot proceed reliably because the baseline, behavioral obligations,
 fixtures, or regression-detection mechanisms are inadequate.
@@ -398,7 +365,3 @@ Residual risk or unverified areas: <none or exact limitation>
 
 Never claim that the resulting suite is equivalent, stronger, clearer, or faster without evidence supporting the
 relevant claim.
-
-Do not use test count, ease of deletion, low semantic risk, or ease of proof as the primary success measure. The success
-criterion is meaningful reduction of test-suite maintenance burden and unnecessary complexity across the requested scope
-while preserving the behavioral evidence that matters.

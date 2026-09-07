@@ -23,9 +23,10 @@ Select the model and effort from, in order:
 Do not assume a moving alias resolves to a particular model. Report the requested identifier and any effective
 identifier the CLI exposes.
 
-For Fable 5.1, retain configured effort; absent a selection, start with its supported default (`high`). Evaluate other
-levels separately instead of mapping GPT effort labels onto Claude. If the target is unavailable, report it without
-silently falling back. Batch independent file reads where supported and keep the requested final report concise.
+For Fable 5.1, retain configured effort; absent a selection, pass no effort flag and record the effective level the CLI
+reports. Evaluate other levels separately instead of mapping GPT effort labels onto Claude. If the target is
+unavailable, report it without silently falling back. Batch independent file reads where supported and keep the
+requested final report concise.
 
 ## Read-only advisory command
 

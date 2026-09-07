@@ -15,13 +15,9 @@ Improve the quality and maintainability of an already-correct production-code sc
 behavior.
 
 The objective is to remove unnecessary concepts, legacy surface, duplication, indirection, and accidental complexity so
-that the codebase is easier to understand, modify, and maintain.
-
-**Do not optimize for the smallest, easiest, or safest possible edit.**
-
-Semantic risk, blast radius, and regression evidence are acceptance and verification constraints. They are not the
-primary candidate-selection objective. Prefer the highest-value maintainability improvement that can be justified and
-verified.
+that the codebase is easier to understand, modify, and maintain. Rank candidates by the maintenance burden they remove,
+not by how small, easy, or safe the edit is; semantic risk, blast radius, and regression evidence decide whether a
+valuable candidate can be applied, not which candidate to prefer. Audit the whole requested scope before finishing.
 
 Follow explicit user instructions over procedural defaults within host permissions. Reuse existing authorization,
 complete the requested scope, and identify the specific instruction and missing decision if this skill blocks work.
@@ -48,8 +44,7 @@ The user's requested scope is authoritative.
 - Do not simplify tests under this skill except where a production-code refactor requires mechanically updating tests
   while preserving their meaning and strength.
 
-For a large scope, inspect it systematically by subsystem or component. Do not stop merely because an easy candidate has
-already been found.
+For a large scope, inspect it systematically by subsystem or component.
 
 ## Preconditions
 
@@ -137,10 +132,7 @@ Reject changes that merely:
 
 ## Audit and candidate selection
 
-Audit the requested scope before deciding that the work is complete.
-
-Identify material simplification and refactoring opportunities throughout that scope. Do not use an arbitrary
-candidate-count limit and do not stop after finding the first acceptable change.
+Identify material simplification and refactoring opportunities throughout the requested scope.
 
 Rank candidates primarily by expected codebase-quality benefit:
 
@@ -153,15 +145,8 @@ Rank candidates primarily by expected codebase-quality benefit:
 1. future change cost reduced;
 1. incidental complexity removed.
 
-Then determine whether each candidate can be changed safely.
-
-Semantic risk, blast radius, and regression evidence are **feasibility constraints**, not the optimization objective.
-Use them to decide whether a valuable candidate can be justified and verified.
-
-Do not prefer a low-value cleanup merely because it is easier to prove when a materially higher-value candidate in the
-requested scope can also be verified.
-
-When candidates have comparable maintenance value, prefer the one with stronger evidence and lower semantic risk.
+Then determine whether each candidate can be changed safely. When candidates have comparable maintenance value, prefer
+the one with stronger evidence and lower semantic risk.
 
 For every material candidate, assess:
 
@@ -187,8 +172,7 @@ unless the user explicitly requested a smaller budget or a single change.
 
 Prefer coherent conceptual changes over collections of cosmetic edits.
 
-Do not artificially constrain the pass to one concept. When several independent simplifications are justified, perform
-them sequentially and validate each one.
+When several independent simplifications are justified, perform them sequentially and validate each one.
 
 When candidates overlap, apply the most foundational justified change first, then reassess the remaining candidates
 against the simplified code.
@@ -209,8 +193,7 @@ Before editing a candidate, compare the proposed before-and-after behavior acros
 
 If equivalence depends on an unsupported assumption, obtain the missing evidence or retain that behavior.
 
-Do not downgrade a valuable candidate merely because proving it requires more investigation than proving a trivial
-cleanup. Investigate enough to make a sound decision within the requested scope.
+Investigate enough to make a sound decision within the requested scope.
 
 ## Edit and validate
 
@@ -221,7 +204,6 @@ cleanup. Investigate enough to make a sound decision within the requested scope.
 1. Inspect the resulting diff for accidental semantic or scope changes.
 1. Revert or revise immediately when equivalence becomes uncertain or a relevant check regresses.
 1. Reassess overlapping candidates after structural changes rather than mechanically applying a stale plan.
-1. Continue auditing and simplifying until no material justified opportunity remains in the requested scope.
 1. Rerun every baseline command and the broader repository-required checks appropriate to the resulting risk.
 1. For security, concurrency, compatibility, migration, persistence, or hot-path behavior, rerun the relevant
    specialized checks. Never infer safety or performance from code shape alone.
@@ -287,9 +269,6 @@ Retain or report an individual candidate when:
 - it would add a dependency, broaden permissions, change build policy, or introduce behavior;
 - it expands into architectural redesign beyond behavior-preserving simplification.
 
-An unresolved candidate does not terminate the entire pass unless it prevents reliable analysis or validation of the
-remaining requested scope.
-
 Return `blocked` when the audit as a whole cannot proceed safely because the behavioral basis, baseline, working-copy
 isolation, or required regression detection is inadequate.
 
@@ -326,7 +305,3 @@ Residual risk or unverified areas: <none or exact limitation>
 ```
 
 Do not claim a check passed unless its result was observed.
-
-Do not use removed line count, number of edits, small blast radius, or ease of proof as the primary measure of success.
-The success criterion is meaningful reduction of maintenance and conceptual burden across the requested scope while
-preserving accepted behavior.

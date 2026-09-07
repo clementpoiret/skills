@@ -76,7 +76,7 @@ Evaluate each target separately; a result on one model does not validate the oth
 | Host | Target model | Initial effort | Additional trials |
 | --- | --- | --- | --- |
 | Codex | `gpt-6-astra` | Preserve the configured supported setting | Sweep available levels only with a fixed workload and budget. |
-| Claude Code | `claude-fable-5-1` | Preserve the configured setting; otherwise `high` | Include lower effort for routine tasks and higher effort where quality warrants it. |
+| Claude Code | `claude-fable-5-1` | Preserve the configured setting; otherwise the host default, recorded as observed | Include lower effort for routine tasks and higher effort where quality warrants it. |
 
 Record the effective model identifier and host version from observable runtime evidence. A requested alias alone is
 insufficient to claim the target ran. Keep each effort/harness configuration in a separate results file: the current
