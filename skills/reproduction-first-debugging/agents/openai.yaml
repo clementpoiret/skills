@@ -1,7 +1,6 @@
 interface:
   display_name: "Reproduction-First Debugging"
-  short_description: "Reproduce failures and fix verified root causes"
-  default_prompt: "Use $reproduction-first-debugging to preserve the failure, run discriminating experiments, fix the root cause minimally, and rerun the original reproduction."
-
+  short_description: "Find and fix the cause of a reproduced failure"
+  default_prompt: "Use $reproduction-first-debugging to reproduce the reported failure, identify its cause, and verify a repair."
 policy:
   allow_implicit_invocation: true

@@ -1,63 +1,34 @@
-# Invoking a Claude peer
+# Claude peer setup
 
-Use this reference when the primary agent is Codex and the peer is Claude Code.
+Use when Codex is primary and Claude Code is the peer.
 
-## Capability preflight
+Observe `claude --version` and `claude --help` once for the run configuration. Check authentication using a
+documented non-billable status mechanism when available; otherwise let the single authorized run surface the
+limitation. Honor an explicit user model selection, then repository policy, then the configured provider
+default. Do not hardcode a moving model alias or infer entitlement from support for a model flag. Preserve
+configured effort and record only effective values the CLI exposes; do not map another provider's effort
+labels by guesswork.
 
-Observe installed help before selecting flags:
+Use a non-persistent, noninteractive, file-only advisory run. The original CLI recipe uses these options,
+which must be checked against installed help before use:
 
-```sh
-claude --version
-claude --help
+```text
+claude -p --no-session-persistence --permission-mode dontAsk
+  --tools "Read,Glob,Grep,Skill"
+  --allowedTools "Read" "Glob" "Grep" "Skill"
+  --disallowedTools "mcp__*" "Skill(cross-agent)" "Skill(cross-agent *)"
+  <validated-model-options> <literal-prompt-argument>
 ```
 
-Confirm the installed CLI supports every flag you intend to use. Check authentication through a documented non-billable
-status mechanism when available; otherwise let the single peer process surface the limitation.
+Treat this as a command shape, not a verified command for every version. Require an effective restriction to
+the intended file tools; preapproval alone is not a tool restriction. Deny recursive cross-agent invocation
+and ambient MCP actions. Do not expose Bash, writes, subagents, agent teams, or other delegation in an
+advisory run. Block the run if these boundaries cannot be enforced.
 
-Select the model and effort from, in order:
+Supply required `/skill-name` invocations before ordinary task text using syntax supported by the installed
+host. Pass the context safely through stdin or literal arguments. Because a file-only peer cannot execute VCS
+commands, provide the primary's observed VCS evidence and have the peer distinguish that supplied evidence
+from independent inspection.
 
-1. explicit user request;
-2. applicable repository policy;
-3. `claude-fable-5-1`, after confirming installed support and entitlement.
-
-Do not assume a moving alias resolves to a particular model. Report the requested identifier and any effective
-identifier the CLI exposes.
-
-For Fable 5.1, retain configured effort; absent a selection, pass no effort flag and record the effective level the CLI
-reports. Evaluate other levels separately instead of mapping GPT effort labels onto Claude. If the target is
-unavailable, report it without silently falling back. Batch independent file reads where supported and keep the
-requested final report concise.
-
-## Read-only advisory command
-
-Prefer a non-persistent, noninteractive run with the narrowest built-in tool surface. The following is a command **shape**;
-omit or adjust flags not supported by the observed CLI rather than guessing:
-
-```sh
-cat <<'PEER_PROMPT' | claude -p \
-  --no-session-persistence \
-  --permission-mode dontAsk \
-  --tools "Read,Glob,Grep,Skill" \
-  --allowedTools "Read" "Glob" "Grep" "Skill" \
-  --disallowedTools "mcp__*" "Skill(cross-agent)" "Skill(cross-agent *)" \
-  <validated-model-and-effort-flags> \
-  "<required /skill-name prefixes> Act as the independent peer. Follow the task and context supplied on stdin."
-<plain-text peer prompt>
-PEER_PROMPT
-```
-
-`--tools` restricts the built-in surface. `--allowedTools` only preapproves matching tools; it is not the restriction
-mechanism. `--disallowedTools` denies recursive `cross-agent` use and ambient MCP tools.
-
-Do not expose Bash, write tools, subagents, or delegation tools for an advisory run. Because the file-only surface cannot
-independently execute VCS commands, supply the primary's observed read-only VCS evidence and require the peer to report
-independent VCS inspection as unavailable.
-
-Required skills must be actual `/skill-name` prefixes in the prompt argument, not prose in stdin. When several are
-required, put all prefixes before ordinary task text using syntax supported by the installed Claude Code version.
-
-## Output and lifecycle
-
-Run from the repository root. Capture stdout, stderr, exit status, duration, and any provider-reported model or usage
-information. Apply [failure-state-machine.md](failure-state-machine.md); do not launch a second process merely because a
-file-only review could not run VCS commands.
+Capture output, errors, exit status, duration, and observed provider/model metadata. Apply the process state
+machine from the root skill. No automatic retry for an unavailable skill or check.

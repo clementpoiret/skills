@@ -16,15 +16,12 @@ MAX_SKILL_LINES = 500
 MAX_NAME_CHARS = 64
 MAX_DESCRIPTION_CHARS = 1024
 MAX_COMPATIBILITY_CHARS = 500
+# Local description-only budget; not the host's full skill-list/context budget.
 MAX_INITIAL_DESCRIPTION_CHARS = 8000
-MAX_OPENAI_SHORT_DESCRIPTION_CHARS = 100
+MIN_OPENAI_SHORT_DESCRIPTION_CHARS = 25
+MAX_OPENAI_SHORT_DESCRIPTION_CHARS = 64
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 LINK_RE = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
-REQUIRED_BODY_HEADING = "## Do not use when"
-REQUIRED_METADATA = {
-    "assurance-validation-status",
-    "assurance-eval-catalog",
-}
 VALIDATION_STATUSES = {"unvalidated-candidate", "candidate", "validated"}
 
 
@@ -83,7 +80,10 @@ def parse_frontmatter(path: Path) -> tuple[dict[str, str], list[Issue]]:
             issues.append(Issue("invalid-frontmatter-line", path, f"line {line_number} has no ':'"))
             continue
         key, value = line.split(":", 1)
-        values[key.strip()] = value.strip().strip('"\'')
+        key = key.strip()
+        if key in values:
+            issues.append(Issue("duplicate-frontmatter-key", path, f"duplicate key: {key}"))
+        values[key] = value.strip().strip('"\'')
     return values, issues
 
 
@@ -263,22 +263,8 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
                     f"description has {len(description)} characters; maximum is {MAX_DESCRIPTION_CHARS}",
                 )
             )
-        if not re.search(r"\bUse\b", description):
-            issues.append(
-                Issue(
-                    "description-missing-positive-trigger",
-                    skill_md,
-                    "description must state when to use it",
-                )
-            )
-        if "Do not use" not in description:
-            issues.append(
-                Issue(
-                    "description-missing-negative-trigger",
-                    skill_md,
-                    "description must state a discriminative do-not-use condition",
-                )
-            )
+        if "<" in description or ">" in description:
+            issues.append(Issue("invalid-description", skill_md, "description must not contain angle brackets"))
 
     compatibility = frontmatter.get("compatibility")
     if compatibility is not None and (not compatibility or len(compatibility) > MAX_COMPATIBILITY_CHARS):
@@ -290,15 +276,7 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
             )
         )
 
-    missing_metadata = sorted(REQUIRED_METADATA - metadata.keys())
-    if missing_metadata:
-        issues.append(
-            Issue(
-                "missing-assurance-metadata",
-                skill_md,
-                f"metadata is missing: {', '.join(missing_metadata)}",
-            )
-        )
+    # Legacy provenance is checked when present, not required in model-visible metadata.
     status = metadata.get("assurance-validation-status")
     if status is not None and status not in VALIDATION_STATUSES:
         issues.append(
@@ -343,14 +321,8 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
                     )
 
     body = skill_body(skill_md)
-    if REQUIRED_BODY_HEADING not in body:
-        issues.append(
-            Issue(
-                "missing-anti-applicability-section",
-                skill_md,
-                f"body must contain the exact heading '{REQUIRED_BODY_HEADING}'",
-            )
-        )
+    if not body.strip():
+        issues.append(Issue("empty-skill-body", skill_md, "skill instructions must not be empty"))
 
     try:
         line_count = len(skill_md.read_text(encoding="utf-8").splitlines())
@@ -370,7 +342,7 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
     user_invocable = (
         parse_bool(user_invocable_raw) if user_invocable_raw is not None else None
     )
-    if user_invocable is None:
+    if user_invocable_raw is not None and user_invocable is None:
         issues.append(
             Issue(
                 "invalid-claude-policy",
@@ -381,7 +353,7 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
 
     disable_raw = frontmatter.get("disable-model-invocation")
     disable_model = parse_bool(disable_raw) if disable_raw is not None else None
-    if disable_model is None:
+    if disable_raw is not None and disable_model is None:
         issues.append(
             Issue(
                 "invalid-claude-policy",
@@ -404,13 +376,15 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
         )
 
     short_description = openai.get("short_description")
-    if isinstance(short_description, str) and len(short_description) > MAX_OPENAI_SHORT_DESCRIPTION_CHARS:
+    if isinstance(short_description, str) and not (
+        MIN_OPENAI_SHORT_DESCRIPTION_CHARS <= len(short_description) <= MAX_OPENAI_SHORT_DESCRIPTION_CHARS
+    ):
         issues.append(
             Issue(
-                "openai-short-description-too-long",
+                "invalid-openai-short-description-length",
                 openai_path,
                 f"short_description has {len(short_description)} characters; "
-                f"maximum is {MAX_OPENAI_SHORT_DESCRIPTION_CHARS}",
+                f"expected {MIN_OPENAI_SHORT_DESCRIPTION_CHARS}-{MAX_OPENAI_SHORT_DESCRIPTION_CHARS}",
             )
         )
     default_prompt = openai.get("default_prompt")

@@ -1,51 +1,27 @@
-# Invoking a Codex peer
+# Codex peer setup
 
-Use this reference when the primary agent is Claude Code and the peer is Codex.
+Use when Claude is primary and Codex is the peer.
 
-## Capability preflight
+Observe `codex --version` and `codex exec --help` once for the run configuration. Verify the installed
+working-directory, stdin, ephemeral, sandbox, and model/effort options before using them. Flag support does
+not prove model entitlement. Honor the user or repository model selection; otherwise target `gpt-6-astra` only
+when available. Keep configured effort unless a supported alternative was requested. Record only effective
+values actually exposed by the CLI.
 
-Observe installed help before selecting flags:
+Prefer ephemeral execution with a read-only filesystem boundary. The following is a command shape, not an
+executable template with known-supported flags:
 
-```sh
-codex --version
-codex exec --help
+```text
+codex exec --ephemeral --sandbox read-only -C <repository-root> <validated-model-options> -
 ```
 
-Confirm support for the selected model, reasoning-effort configuration, ephemeral execution, sandbox, working-directory,
-and stdin behavior. Honor an explicit user or repository selection; otherwise target `gpt-6-astra` when available.
-Validate model selection separately from flag support: accepting `--model` does not prove model entitlement. Keep the
-configured effort unless the task specifies another supported value. Report effective values only when observable.
+Supply the prompt through stdin. Put required `$skill-name` mentions before ordinary task text. Disable or
+restrict ambient MCP/connector actions, network-facing tools, additional agents, and delegation using the
+installed host's supported configuration. Do not assume a read-only filesystem sandbox prevents remote
+mutations or delegation. Inspect effective permissions; if the advisory boundary cannot be enforced, report a
+preflight blocker rather than widening access.
 
-For GPT-6 Astra, keep the peer's review boundary explicit and allow a concise evidence report. A read-only peer should
-finish its assessment without offering to implement it or repeating checks whose results are already available.
-
-## Read-only advisory command
-
-Prefer an ephemeral read-only run. This is a command **shape**; include model or effort flags only after preflight shows
-they are supported:
-
-```sh
-cat <<'PEER_PROMPT' | codex exec \
-  --ephemeral \
-  --sandbox read-only \
-  -C "<repository-root>" \
-  <validated-model-and-effort-flags> \
-  -
-<required $skill-name prefixes, if any>
-
-<plain-text peer prompt>
-PEER_PROMPT
-```
-
-Required `$skill-name` mentions must precede ordinary task text. The peer may use other relevant local skills when the
-host makes them available, but the prompt must prohibit `cross-agent`, delegation workflows, subagents, agent teams, and
-other external agents.
-
-Do not grant workspace write, network tools, MCP tools, or additional capabilities for an advisory review. A loaded skill
-does not expand the sandbox.
-
-## Output and lifecycle
-
-Run from the repository root. Capture stdout, stderr, exit status, duration, and any provider-reported model or usage
-information. Apply [failure-state-machine.md](failure-state-machine.md). An unavailable required skill is missing evidence,
-not permission to retry or broaden the sandbox.
+Use only the capabilities needed for the requested assessment. A skill does not expand them. Capture stdout,
+stderr, exit status, duration, and provider-reported model or usage information. Apply the process state
+machine from the root skill. Missing required skills or unavailable checks are evidence gaps, not reasons to
+retry automatically.

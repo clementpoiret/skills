@@ -11,7 +11,8 @@ Use the first applicable source:
 1. owning-component convention established by nearby accepted history;
 1. otherwise, a concise imperative summary that states the actual logical change.
 
-Jujutsu does not require Conventional Commits. Use Conventional Commits only when one of the authorities above requires
+Jujutsu does not require Conventional Commits. Use Conventional Commits only when one of the authorities above
+requires
 or requests them.
 
 ## Quality gate
@@ -63,8 +64,10 @@ Use the repository-specified version and types. A common form is:
 [optional footer(s)]
 ```
 
-Do not assume a universal type list or capitalization rule when repository policy overrides it. Inspect nearby accepted
-history and validation tooling. Before publication, list the stack's first lines and correct only the revisions owned by
+Do not assume a universal type list or capitalization rule when repository policy overrides it. Inspect nearby
+accepted
+history and validation tooling. Before publication, list the stack's first lines and correct only the
+revisions owned by
 the current task:
 
 ```bash

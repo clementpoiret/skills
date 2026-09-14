@@ -1,7 +1,6 @@
 interface:
   display_name: "Simplify Tests After Green"
-  short_description: "Improve green tests without losing fault detection"
-  default_prompt: "Use $simplify-tests-after-green to audit the requested test scope, remove or refactor material maintenance liabilities, and preserve fault detection with discriminating evidence."
-
+  short_description: "Simplify green tests without losing defect detection"
+  default_prompt: "Use $simplify-tests-after-green to simplify the agreed test scope while preserving meaningful fault detection."
 policy:
   allow_implicit_invocation: false

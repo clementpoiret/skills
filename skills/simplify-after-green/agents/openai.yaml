@@ -1,7 +1,6 @@
 interface:
   display_name: "Simplify After Green"
-  short_description: "Improve green production code for maintainability"
-  default_prompt: "Use $simplify-after-green to audit the requested production-code scope, apply the highest-value justified behavior-preserving simplifications, and verify each change."
-
+  short_description: "Simplify correct production code without behavior drift"
+  default_prompt: "Use $simplify-after-green to simplify the agreed production-code scope while preserving verified behavior."
 policy:
   allow_implicit_invocation: false

@@ -1,5 +1,18 @@
 # History, movement, and rewrites
 
+## Contents
+
+- [Inspect history and changes](#inspect-history-and-changes)
+- [Move the working copy](#move-the-working-copy)
+- [Split noninteractively](#split-noninteractively)
+- [Squash safely](#squash-safely)
+- [Absorb fixups](#absorb-fixups)
+- [Restore paths](#restore-paths)
+- [Revert immutable or published work](#revert-immutable-or-published-work)
+- [Abandon](#abandon)
+- [Rebase](#rebase)
+- [Verification](#verification)
+
 Read this before editing an existing revision or changing graph structure.
 
 ## Inspect history and changes
@@ -14,7 +27,8 @@ jj --no-pager --color=never diff --summary -r <revision>
 jj --no-pager --color=never evolog -r <change-id>
 ```
 
-Prefer `--git` when an agent must interpret a patch. Resolve broad revsets to an inspected set before mutation.
+Prefer `--git` when an agent must interpret a patch. Resolve broad revsets to an inspected set before
+mutation.
 
 ## Move the working copy
 
@@ -33,7 +47,8 @@ jj prev --edit
 jj next --edit
 ```
 
-Prefer a new child plus a later bounded squash when it makes new work easier to inspect. Never edit the same logical
+Prefer a new child plus a later bounded squash when it makes new work easier to inspect. Never edit the same
+logical
 change concurrently from multiple workspaces.
 
 ## Split noninteractively
@@ -45,7 +60,8 @@ jj split path/to/component -m "<description for selected first revision>"
 jj split 'glob:src/parser/**' -m "<description for selected first revision>"
 ```
 
-The selected changes retain the original logical change; remaining changes become a child revision. Inspect and describe
+The selected changes retain the original logical change; remaining changes become a child revision. Inspect
+and describe
 both results.
 
 ## Squash safely
@@ -64,7 +80,8 @@ jj squash --from <source> --into <destination> --use-destination-message
 jj squash -m "<description>"
 ```
 
-Do not use bare `jj squash` when both source and destination have nonempty descriptions; it may open an editor.
+Do not use bare `jj squash` when both source and destination have nonempty descriptions; it may open an
+editor.
 
 ## Absorb fixups
 
@@ -75,7 +92,8 @@ jj absorb path/to/file
 jj --no-pager --color=never op show -p
 ```
 
-Use explicit filesets. Avoid interactive hunk selection in unattended operation. Inspect every rewritten revision.
+Use explicit filesets. Avoid interactive hunk selection in unattended operation. Inspect every rewritten
+revision.
 
 ## Restore paths
 
@@ -92,7 +110,8 @@ jj restore --from <source> path/to/file
 jj restore --from <source> --into <destination> path/to/file
 ```
 
-Bare `jj restore` removes the entire diff from `@` while leaving the revision metadata. Use it only when intentionally
+Bare `jj restore` removes the entire diff from `@` while leaving the revision metadata. Use it only when
+intentionally
 discarding the complete working-copy diff and after preserving unrelated work.
 
 ## Revert immutable or published work
@@ -117,7 +136,8 @@ jj --no-pager --color=never status
 jj --no-pager --color=never log -r '::@' -n 20
 ```
 
-Use only for clearly obsolete mutable work owned by the current task. Inspect the complete resolved revision set first.
+Use only for clearly obsolete mutable work owned by the current task. Inspect the complete resolved revision
+set first.
 
 ## Rebase
 
@@ -137,12 +157,14 @@ jj rebase --source <revision> --onto <destination>
 jj rebase --branch <revision> --onto <destination>
 ```
 
-Without `--branch`, `--source`, or `--revision`, `jj rebase` defaults to the branch containing `@`. Inspect that stack
+Without `--branch`, `--source`, or `--revision`, `jj rebase` defaults to the branch containing `@`. Inspect
+that stack
 before running it.
 
 ## Verification
 
-After every rewrite:
+After a rewrite, choose the checks that establish its graph, content, or operation postconditions. The
+commands below are options, not a mandatory sequence:
 
 ```bash
 jj --no-pager --color=never status

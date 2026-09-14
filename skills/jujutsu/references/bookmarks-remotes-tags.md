@@ -1,11 +1,21 @@
 # Bookmarks, remotes, and tags
 
-Read this before fetch, push, bookmark deletion or movement, or any tag operation. These are repository mutations and
+## Contents
+
+- [Bookmarks](#bookmarks)
+- [Clone, initialize, and colocation](#clone-initialize-and-colocation)
+- [Fetch](#fetch)
+- [Tags](#tags)
+- [Push safely](#push-safely)
+
+Read this before fetch, push, bookmark deletion or movement, or any tag operation. These are repository
+mutations and
 may have remote-visible effects.
 
 ## Bookmarks
 
-Bookmarks are movable revision names and Git branch counterparts. They do not generally advance when `new` or `commit`
+Bookmarks are movable revision names and Git branch counterparts. They do not generally advance when `new` or
+`commit`
 creates a child.
 
 ```bash
@@ -15,7 +25,8 @@ jj bookmark advance 'exact:feature-name' --to @
 jj bookmark advance 'exact:feature-name' --to @-
 ```
 
-Use `bookmark advance` for normal forward movement. Backward or sideways movement requires explicit authorization and
+Use `bookmark advance` for normal forward movement. Backward or sideways movement requires explicit
+authorization and
 inspection of both targets:
 
 ```bash
@@ -47,7 +58,8 @@ jj git init --colocate
 jj git colocation status
 ```
 
-Do not create repositories, change colocation mode, add remotes, or remap remotes unless the user requested it. Verify
+Do not create repositories, change colocation mode, add remotes, or remap remotes unless the user requested
+it. Verify
 version-specific clone tag flags from installed help.
 
 ## Fetch
@@ -73,7 +85,8 @@ jj --no-pager --color=never log -r 'trunk()..@'
 
 ## Tags
 
-Tag creation, movement, deletion, tracking, and publication require explicit user intent because they can affect release
+Tag creation, movement, deletion, tracking, and publication require explicit user intent because they can
+affect release
 identity and later push selection.
 
 ```bash
@@ -85,7 +98,8 @@ jj tag track 'release-name@origin'
 jj tag untrack 'release-name@origin'
 ```
 
-Moving an existing tag, deleting a tracked tag, or changing tracking policy requires exact authorization. A local tag
+Moving an existing tag, deleting a tracked tag, or changing tracking policy requires exact authorization. A
+local tag
 deletion can become a remote deletion on a later push.
 
 ## Push safely
@@ -125,9 +139,12 @@ jj git push --dry-run --remote origin --change @-
 jj git push --remote origin --change @-
 ```
 
-Avoid bare push, `--all`, `--tracked`, or `--deleted` unless the user intends the complete resolved set. On `jj 0.44`,
-tracked tags can participate in default selection, `--all` includes tags, and `--tracked` includes tracked tags. Verify
-installed help on other versions. Do not bypass protections such as empty-description, private-commit, or conflict
+Avoid bare push, `--all`, `--tracked`, or `--deleted` unless the user intends the complete resolved set. On
+`jj 0.44`,
+tracked tags can participate in default selection, `--all` includes tags, and `--tracked` includes tracked
+tags. Verify
+installed help on other versions. Do not bypass protections such as empty-description, private-commit, or
+conflict
 checks—including `--allow-conflicts`—without explicit authorization and a documented reason.
 
-After push, re-list bookmarks and tags and report exactly what changed.
+After push, inspect the affected remote references (bookmarks, tags, or both) and report exactly what changed.

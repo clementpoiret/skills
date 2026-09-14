@@ -1,6 +1,7 @@
 # Workspaces
 
-A workspace is a working copy attached to a shared Jujutsu repository. Each workspace has its own working-copy revision
+A workspace is a working copy attached to a shared Jujutsu repository. Each workspace has its own working-copy
+revision
 and sparse patterns; revisions, operations, bookmarks, tags, and remote-tracking state are shared.
 
 Creating, forgetting, renaming, or deleting a workspace requires explicit user intent.
@@ -22,7 +23,8 @@ jj workspace add ../my-tests
 jj workspace add --name tests --revision <revision> -m "<description>" ../my-tests
 ```
 
-Inspect destination existence, requested base, and shared repository state first. Do not create a workspace merely to
+Inspect destination existence, requested base, and shared repository state first. Do not create a workspace
+merely to
 hide uncertain changes.
 
 ## Forget or rename
@@ -35,11 +37,13 @@ jj workspace forget <workspace-name>
 jj workspace rename <new-name>
 ```
 
-Do not delete a workspace directory until metadata handling and preservation of any filesystem changes are clear.
+Do not delete a workspace directory until metadata handling and preservation of any filesystem changes are
+clear.
 
 ## Avoid shared working-copy changes
 
-Do not use `jj edit <revision>` in two workspaces at once. Rewriting one workspace's working-copy change from another
+Do not use `jj edit <revision>` in two workspaces at once. Rewriting one workspace's working-copy change from
+another
 can make the first stale. Use separate logical changes when concurrent work is necessary.
 
 ## Recover a stale workspace
@@ -50,12 +54,14 @@ jj --no-pager --color=never status
 jj --no-pager --color=never log -r '@ | divergent()'
 ```
 
-Recovery may create a divergent revision or preserve stale work under another version. Numeric suffixes such as `/0` and
+Recovery may create a divergent revision or preserve stale work under another version. Numeric suffixes such
+as `/0` and
 `/1` identify divergent versions. Inspect all versions and preserve user work before resolving divergence.
 
 ## Verify
 
-After any workspace mutation:
+After a workspace mutation, verify the affected workspace identity and state using the relevant commands
+below:
 
 ```bash
 jj --no-pager --color=never workspace list

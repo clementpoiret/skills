@@ -1,6 +1,7 @@
 # Conflicts and recovery
 
-Jujutsu can record conflicts inside revisions. Most graph operations do not stop for a separate `continue` step.
+Jujutsu can record conflicts inside revisions. Most graph operations do not stop for a separate `continue`
+step.
 
 ## Inspect conflicts
 
@@ -15,7 +16,8 @@ Read surrounding history and determine the intended semantics before choosing a 
 
 ## Resolve by editing
 
-Edit conflict markers in the working copy, then verify that the conflict disappeared and tests cover the resolved
+Edit conflict markers in the working copy, then verify that the conflict disappeared and tests cover the
+resolved
 behavior:
 
 ```bash
@@ -24,10 +26,12 @@ jj --no-pager --color=never resolve --list
 jj --no-pager --color=never diff --git
 ```
 
-When the conflict belongs to a mutable ancestor, create or use an inspectable child, fix the ancestor deliberately, and
+When the conflict belongs to a mutable ancestor, create or use an inspectable child, fix the ancestor
+deliberately, and
 inspect any descendant rebases. Do not edit the same change from multiple workspaces.
 
-Use `jj resolve --tool=:ours` or `:theirs` only when taking the entire selected side is semantically correct. Do not use
+Use `jj resolve --tool=:ours` or `:theirs` only when taking the entire selected side is semantically correct.
+Do not use
 an external merge tool unless it is independently authorized and noninteractive for the intended operation.
 
 ## Immediate undo and redo
@@ -39,7 +43,8 @@ jj undo
 jj redo
 ```
 
-Repeated undo walks backward through operations; repeated redo walks forward through undone operations. Verify status,
+Repeated undo walks backward through operations; repeated redo walks forward through undone operations. Verify
+status,
 graph, diff, bookmarks, and tags as relevant after each step.
 
 ## Inspect operations without snapshotting
@@ -50,7 +55,8 @@ jj --at-op=<operation-id> --no-pager --color=never status
 jj --at-op=<operation-id> --no-pager --color=never log
 ```
 
-Use `--ignore-working-copy` here only to avoid snapshotting current filesystem changes while inspecting historical
+Use `--ignore-working-copy` here only to avoid snapshotting current filesystem changes while inspecting
+historical
 operations.
 
 ## Restore or revert operations
@@ -63,7 +69,8 @@ jj op restore <operation-id>
 jj op revert <operation-id>
 ```
 
-`op restore` can restore remote-tracking state as well as revisions. Inspect bookmarks and tags before any later push.
+`op restore` can restore remote-tracking state as well as revisions. Inspect bookmarks and tags before any
+later push.
 Do not garbage-collect or abandon operation history as routine cleanup.
 
 ## Recovery discipline

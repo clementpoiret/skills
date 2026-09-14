@@ -1,11 +1,13 @@
 # Version compatibility
 
-The core skill was reviewed against `jj 0.44.0` on 2026-08-24. This is a maintenance statement, not a guarantee that
-0.44.0 is the newest release when the skill is used.
+The supplied library records a review against `jj 0.44.0` on 2026-08-24. That is inherited provenance, not a
+review performed during this prompt rewrite or a claim about the latest release. Verify needed
+version-sensitive behavior against the installed CLI.
 
 ## Installed help is authoritative
 
-Always observe:
+When the version is unknown or a required option is uncertain, inspect the relevant help; reuse already
+observed results:
 
 ```bash
 jj version
@@ -13,7 +15,8 @@ jj help <command>
 jj help <command> <subcommand>
 ```
 
-Before using a version-sensitive flag, confirm it appears in installed help and inspect its semantics. Do not translate
+Before using a version-sensitive flag, confirm it appears in installed help and inspect its semantics. Do not
+translate
 old examples mechanically when defaults or selection behavior changed.
 
 ## Compatibility procedure

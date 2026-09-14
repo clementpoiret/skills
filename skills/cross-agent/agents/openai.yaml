@@ -1,7 +1,6 @@
 interface:
   display_name: "Cross-Agent"
-  short_description: "Run and reconcile independent peer analysis"
-  default_prompt: "Use $cross-agent to preflight and run one independent read-only peer analysis, then verify and reconcile every material finding."
-
+  short_description: "Request a bounded independent external peer assessment"
+  default_prompt: "Use $cross-agent to obtain and reconcile one independent peer assessment of the requested target."
 policy:
   allow_implicit_invocation: false

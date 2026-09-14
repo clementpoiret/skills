@@ -1,7 +1,6 @@
 interface:
   display_name: "Specification-Grounded Testing"
-  short_description: "Build independent tests from authoritative requirements"
-  default_prompt: "Use $specification-grounded-testing to derive a requirement-to-test oracle and validate its sensitivity without changing production behavior."
-
+  short_description: "Build tests from independent behavioral contracts"
+  default_prompt: "Use $specification-grounded-testing to create tests that accept specified behavior and reject plausible defects."
 policy:
   allow_implicit_invocation: true
