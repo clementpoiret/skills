@@ -1,51 +1,76 @@
-# Focused coding skills for GPT-6 Astra
+# Focused coding skills
 
-Ten instruction-only skills and a compact global coding policy. The canonical files target Codex with GPT-6 Astra. Model selection, reasoning effort, credentials, and runtime permissions belong in the host, not in a skill description.
+Ten reusable skills for coding agents, covering implementation, debugging, review, testing, optimization, and code maintenance. Each skill defines when to use it, how to approach the work, and what evidence is needed to call the task complete.
 
-The rewrite removes repeated workflow scaffolding while retaining the library's contracts, independent oracles, scope boundaries, and verification standards. Structural validation is not evidence of better model performance; see [EVALS.md](EVALS.md) for comparative trials and [AUDIT.md](AUDIT.md) for this revision's measured changes and validation limits.
+**These skills currently target GPT-6 and Fable 5.1.** The source format is for Codex, with an exporter for Claude Code. Select the model, reasoning effort, and permissions in your agent's configuration.
 
-## Skill selection
+The library emphasizes understanding the existing code, keeping changes within scope, and verifying observable behavior. Skills are Markdown instructions with supporting references; the repository also includes validation scripts and evaluation fixtures.
 
-| Skill | Deliverable | Invocation |
+## Available skills
+
+| Skill | Use it to | Invocation |
 | --- | --- | --- |
-| `grounded-implementation` | Nontrivial requested feature or refactor, implemented and checked. | Automatic or explicit |
-| `reproduction-first-debugging` | Evidence-led diagnosis and repair of a reported failure. | Automatic or explicit |
-| `precision-review` | Read-only, actionable defect assessment. | Automatic or explicit |
-| `specification-grounded-testing` | Tests or verifiers based on independent requirements. | Automatic or explicit |
-| `profile-guided-optimization` | Measured, behavior-preserving improvement or a supported no-change result. | Automatic or explicit |
-| `jujutsu` | Scoped VCS work in a confirmed Jujutsu workspace. | Automatic or explicit |
-| `change-contract` | Defined acceptance criteria/invariants or an accepted-contract audit. | Explicit only |
-| `cross-agent` | Independent external peer assessment; writes require separate scope. | Explicit only |
-| `simplify-after-green` | Verified simplification of correct production code. | Explicit only |
-| `simplify-tests-after-green` | Green-suite simplification preserving fault detection. | Explicit only |
+| [grounded-implementation](skills/grounded-implementation/SKILL.md) | Implement a nontrivial feature, behavior change, or refactor from requirements. | Automatic or explicit |
+| [reproduction-first-debugging](skills/reproduction-first-debugging/SKILL.md) | Reproduce a reported failure, identify its cause, and verify the repair. | Automatic or explicit |
+| [precision-review](skills/precision-review/SKILL.md) | Review code for concrete, actionable defects without editing it. | Automatic or explicit |
+| [specification-grounded-testing](skills/specification-grounded-testing/SKILL.md) | Build tests and verifiers from independent requirements. | Automatic or explicit |
+| [profile-guided-optimization](skills/profile-guided-optimization/SKILL.md) | Measure a bottleneck and improve performance while preserving behavior. | Automatic or explicit |
+| [jujutsu](skills/jujutsu/SKILL.md) | Perform scoped version-control work in a confirmed Jujutsu workspace. | Automatic or explicit |
+| [change-contract](skills/change-contract/SKILL.md) | Define acceptance criteria and invariants, or audit an accepted contract. | Explicit only |
+| [cross-agent](skills/cross-agent/SKILL.md) | Request an independent Codex or Claude peer assessment, or a separately authorized peer edit. | Explicit only |
+| [simplify-after-green](skills/simplify-after-green/SKILL.md) | Simplify correct production code while preserving verified behavior. | Explicit only |
+| [simplify-tests-after-green](skills/simplify-tests-after-green/SKILL.md) | Simplify a passing test suite while preserving its ability to detect faults. | Explicit only |
 
-Examples: `$precision-review` for an assessment, `$change-contract define` for a contract, or `$simplify-tests-after-green` for a test-maintenance pass. Ordinary implementation does not automatically start these optional workflows. Both simplification skills retain the original repository-wide default when the user supplies no narrower scope; name a directory or change budget when that is the intended limit.
+Automatic skills can be selected by the agent when a task matches their description. Explicit-only skills require a direct request.
 
-## Install for Codex
+## Installation
 
-Keep the extracted repository in a stable location. Install or symlink each directory under `skills/` into `~/.agents/skills/`, or into a project's `.agents/skills/` for project-scoped use. Codex supports symlinked skill folders. Do not install a second copy with the same skill names in another discovery location: duplicate names are not merged. See the official [skill discovery documentation](https://learn.chatgpt.com/docs/build-skills).
+Clone or download this repository to a stable location. Install only the skills you want, keeping each skill's complete directory and supporting files together. Back up any existing copies before replacing them, and preserve unrelated skills.
 
-For an existing installation, first back up the matching ten skill directories or identify their symlink targets. Replace those copies with this revision; preserve unrelated installed skills. When symlinks already point to a maintained checkout, update that checkout rather than adding duplicate links. No installation or changes to your real configuration were performed by this package.
+### Codex
 
-Back up the existing global policy, then copy `global/AGENTS.md` to `$CODEX_HOME/AGENTS.md`, normally `~/.codex/AGENTS.md`. A nonempty `AGENTS.override.md` at that level takes precedence, and project instructions can override broader guidance. Start a new session and inspect its loaded instruction sources. See the official [AGENTS.md discovery rules](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+Copy or symlink individual directories from `skills/` into `~/.agents/skills/` for personal use, or into your project's `.agents/skills/` for project use. Avoid duplicate installations with the same skill names. See the official [Codex skill discovery documentation](https://learn.chatgpt.com/docs/build-skills).
 
-Do not paste every skill into the global file. Keep project commands, environment facts, and trusted local-test permissions in the relevant project's instructions. This global policy deliberately does not assert that every repository's tests are disposable or lack production access.
-
-## Optional Claude Code copy
-
-The canonical `SKILL.md` frontmatter contains only `name` and `description`. Codex invocation policy lives in `agents/openai.yaml`; it is not a substitute for Claude's host-specific controls. Generate a separate copy for Claude:
+For example, run this from the repository root to install `precision-review` as a personal symlink, provided that destination does not already exist:
 
 ```sh
-python scripts/export_claude_skills.py /tmp/skills-astra-claude
+mkdir -p "$HOME/.agents/skills"
+ln -s "$PWD/skills/precision-review" "$HOME/.agents/skills/precision-review"
 ```
 
-The destination must not exist and must be outside this repository. The exporter preserves the bodies and resources, sets `user-invocable: true`, and derives `disable-model-invocation` from each Codex invocation policy. It does not install anything or edit the source. Install the exported skill folders under your Claude skills location, preserving unrelated skills. Regenerate into a fresh destination after canonical updates.
+A symlink uses the files in your checkout, so updates to that checkout also update the installed skill.
 
-The old `allowed-tools: Bash(jj *)` preapproval is intentionally not exported: a broad `jj` prefix is not a read-only restriction. Use reviewed host permissions instead. Claude's invocation and tool-grant semantics are documented [here](https://code.claude.com/docs/en/skills). Export compatibility is structurally tested; live host behavior still requires a runtime smoke test.
+### Claude Code
 
-## Maintain and validate
+Generate a Claude-compatible copy from the repository root:
 
-The repository scripts use the Python standard library. Run:
+```sh
+python scripts/export_claude_skills.py /tmp/coding-skills-claude
+```
+
+The destination must be a new directory outside this repository. The exporter copies all ten skills and their resources, translating the Codex invocation policies into Claude frontmatter. It leaves the source files unchanged and does not install anything.
+
+Copy the desired exported skill directories into `~/.claude/skills/` for personal use or your project's `.claude/skills/` for project use. See the official [Claude Code skills documentation](https://code.claude.com/docs/en/skills). After source updates, regenerate the export into a fresh directory and replace your installed copies.
+
+## Usage
+
+Give the agent a concrete task and a scope. In Codex, for example:
+
+```text
+$precision-review Review the current diff for actionable defects.
+
+$change-contract define Define acceptance criteria for adding cursor pagination to the search endpoint.
+
+$simplify-tests-after-green Simplify tests in tests/auth/ while preserving coverage of distinct behaviors.
+```
+
+In Claude Code, invoke the corresponding skill with `/precision-review`, `/change-contract`, or `/simplify-tests-after-green`.
+
+The two simplification skills default to repository-wide scope when no narrower scope is supplied. Name a directory or component when you want a focused pass. The `cross-agent` skill requires an available, configured peer tool; the `jujutsu` skill requires an active Jujutsu workspace.
+
+## Validation and evaluation
+
+The repository's maintenance scripts use the Python standard library. Run these commands from the repository root:
 
 ```sh
 python scripts/validate_skills.py
@@ -54,8 +79,10 @@ python scripts/eval_fixtures.py check
 python -m unittest discover -s tests -v
 ```
 
-Fixture checks execute bundled code; use a disposable development environment. Candidate verifiers additionally require explicit acknowledgment of untrusted-code execution; see [EVALS.md](EVALS.md).
+The checks cover skill structure, invocation metadata, local links, evaluation cases, fixtures, and repository tooling. Fixture checks execute bundled code; run them in a disposable development environment.
 
-Keep task-specific details in a skill and conditional references one level below its root. Keep maintainer reports here, not inside skill folders. The validator checks this library's lightweight metadata format, names, policies, links, scripts, and length constraints. It is not a general YAML parser or a model-quality evaluator. Run OpenAI's `skill-creator` validation when available and test actual trigger behavior after substantive changes.
+These checks do not establish model performance. See [EVALS.md](EVALS.md) for the evaluation protocol, executable fixtures, and instructions for comparing skill-assisted runs with a no-skill baseline. Verify actual invocation behavior in your host after substantive skill changes.
 
-License: [MIT](LICENSE), retained from the supplied repository.
+## License
+
+[MIT](LICENSE) © 2026 Clément Poiret.
