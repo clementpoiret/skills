@@ -3,4 +3,4 @@ interface:
   short_description: "Build tests from independent behavioral contracts"
   default_prompt: "Use $specification-grounded-testing to create tests that accept specified behavior and reject plausible defects."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

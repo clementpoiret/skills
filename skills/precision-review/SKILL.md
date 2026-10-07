@@ -1,6 +1,7 @@
 ---
 name: precision-review
 description: "Review a diff, commit, or named code target for concrete actionable defects; assess without editing or turning missing tests into speculative findings."
+disable-model-invocation: true
 ---
 
 # Precision review

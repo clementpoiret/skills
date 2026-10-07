@@ -204,7 +204,7 @@ class ValidatorUnitTests(unittest.TestCase):
                 issues,
             )
 
-    def test_accepts_codex_metadata_without_claude_fields(self) -> None:
+    def test_rejects_codex_metadata_without_claude_policy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             skill = write_skill(
@@ -219,8 +219,7 @@ class ValidatorUnitTests(unittest.TestCase):
             text = text.replace("disable-model-invocation: false\n", "")
             skill_md.write_text(text, encoding="utf-8")
             issues = self.validator.validate_repository(root)
-            invalid = [issue for issue in issues if issue.code == "invalid-claude-policy"]
-            self.assertEqual([], invalid)
+            self.assertEqual(["missing-claude-policy"], [issue.code for issue in issues])
 
     def test_accepts_a_small_aligned_skill_with_existing_reference(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -246,34 +245,39 @@ class RepositoryRegressionTests(unittest.TestCase):
     def test_repository_passes_static_validation(self) -> None:
         self.assertEqual([], self.validator.validate_repository(REPO_ROOT))
 
-    def test_names_and_codex_invocation_policies_are_preserved(self) -> None:
+    def test_only_jujutsu_allows_implicit_invocation_on_every_host(self) -> None:
         expected = {
             "change-contract": False,
             "cross-agent": False,
-            "grounded-implementation": True,
+            "grounded-implementation": False,
             "jujutsu": True,
-            "precision-review": True,
-            "profile-guided-optimization": True,
-            "reproduction-first-debugging": True,
+            "precision-review": False,
+            "profile-guided-optimization": False,
+            "reproduction-first-debugging": False,
             "simplify-after-green": False,
             "simplify-tests-after-green": False,
-            "specification-grounded-testing": True,
+            "specification-grounded-testing": False,
         }
-        actual = {}
+        codex = {}
+        claude = {}
         for skill in (REPO_ROOT / "skills").iterdir():
             if not skill.is_dir():
                 continue
             metadata, issues = self.validator.parse_openai_metadata(skill / "agents" / "openai.yaml")
             self.assertEqual([], issues)
-            actual[skill.name] = metadata["allow_implicit_invocation"]
-        self.assertEqual(expected, actual)
+            codex[skill.name] = metadata["allow_implicit_invocation"]
+            frontmatter, issues = self.validator.parse_frontmatter(skill / "SKILL.md")
+            self.assertEqual([], issues)
+            claude[skill.name] = frontmatter["disable-model-invocation"] == "false"
+        self.assertEqual(expected, codex)
+        self.assertEqual(expected, claude)
 
     def test_canonical_skills_have_minimal_frontmatter_and_local_brevity_budget(self) -> None:
         # These are this library's budgets, not universal OpenAI format limits.
         for path in (REPO_ROOT / "skills").glob("*/SKILL.md"):
             metadata, issues = self.validator.parse_frontmatter(path)
             self.assertEqual([], issues)
-            self.assertEqual({"name", "description"}, set(metadata), path)
+            self.assertEqual({"name", "description", "disable-model-invocation"}, set(metadata), path)
             self.assertLessEqual(len(metadata["description"]), 250, path)
             self.assertLessEqual(len(path.read_text().split()), 650, path)
 

@@ -1,6 +1,7 @@
 ---
 name: change-contract
 description: "Explicitly requested change-contract definition or audit: define acceptance criteria and invariants, or assess a target against an already accepted contract."
+disable-model-invocation: true
 ---
 
 # Change contract

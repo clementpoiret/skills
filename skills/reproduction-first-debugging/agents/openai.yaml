@@ -3,4 +3,4 @@ interface:
   short_description: "Find and fix the cause of a reproduced failure"
   default_prompt: "Use $reproduction-first-debugging to reproduce the reported failure, identify its cause, and verify a repair."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

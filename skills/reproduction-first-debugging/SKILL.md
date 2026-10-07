@@ -1,6 +1,7 @@
 ---
 name: reproduction-first-debugging
 description: "Diagnose and fix a reported bug, failing test, flaky result, or performance regression by reproducing the failure and testing its cause."
+disable-model-invocation: true
 ---
 
 # Reproduction-first debugging

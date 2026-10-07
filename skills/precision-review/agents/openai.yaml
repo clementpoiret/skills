@@ -3,4 +3,4 @@ interface:
   short_description: "Review code for reachable, evidence-backed defects"
   default_prompt: "Use $precision-review to assess the requested target and report only actionable, evidence-backed defects."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

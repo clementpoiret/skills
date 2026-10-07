@@ -2,7 +2,7 @@
 
 Ten reusable skills for coding agents, covering implementation, debugging, review, testing, optimization, and code maintenance. Each skill defines when to use it, how to approach the work, and what evidence is needed to call the task complete.
 
-**These skills currently target GPT-6 and Fable 5.1.** The source format is for Codex, with an exporter for Claude Code. Select the model, reasoning effort, and permissions in your agent's configuration.
+**These skills currently target GPT-6 and Fable 5.1.** The same skill directories work in Codex and Claude Code. Select the model, reasoning effort, and permissions in your agent's configuration.
 
 The library emphasizes understanding the existing code, keeping changes within scope, and verifying observable behavior. Skills are Markdown instructions with supporting references; the repository also includes validation scripts and evaluation fixtures.
 
@@ -10,18 +10,18 @@ The library emphasizes understanding the existing code, keeping changes within s
 
 | Skill | Use it to | Invocation |
 | --- | --- | --- |
-| [grounded-implementation](skills/grounded-implementation/SKILL.md) | Implement a nontrivial feature, behavior change, or refactor from requirements. | Automatic or explicit |
-| [reproduction-first-debugging](skills/reproduction-first-debugging/SKILL.md) | Reproduce a reported failure, identify its cause, and verify the repair. | Automatic or explicit |
-| [precision-review](skills/precision-review/SKILL.md) | Review code for concrete, actionable defects without editing it. | Automatic or explicit |
-| [specification-grounded-testing](skills/specification-grounded-testing/SKILL.md) | Build tests and verifiers from independent requirements. | Automatic or explicit |
-| [profile-guided-optimization](skills/profile-guided-optimization/SKILL.md) | Measure a bottleneck and improve performance while preserving behavior. | Automatic or explicit |
+| [grounded-implementation](skills/grounded-implementation/SKILL.md) | Implement a nontrivial feature, behavior change, or refactor from requirements. | Explicit only |
+| [reproduction-first-debugging](skills/reproduction-first-debugging/SKILL.md) | Reproduce a reported failure, identify its cause, and verify the repair. | Explicit only |
+| [precision-review](skills/precision-review/SKILL.md) | Review code for concrete, actionable defects without editing it. | Explicit only |
+| [specification-grounded-testing](skills/specification-grounded-testing/SKILL.md) | Build tests and verifiers from independent requirements. | Explicit only |
+| [profile-guided-optimization](skills/profile-guided-optimization/SKILL.md) | Measure a bottleneck and improve performance while preserving behavior. | Explicit only |
 | [jujutsu](skills/jujutsu/SKILL.md) | Perform scoped version-control work in a confirmed Jujutsu workspace. | Automatic or explicit |
 | [change-contract](skills/change-contract/SKILL.md) | Define acceptance criteria and invariants, or audit an accepted contract. | Explicit only |
 | [cross-agent](skills/cross-agent/SKILL.md) | Request an independent Codex or Claude peer assessment, or a separately authorized peer edit. | Explicit only |
 | [simplify-after-green](skills/simplify-after-green/SKILL.md) | Simplify correct production code while preserving verified behavior. | Explicit only |
 | [simplify-tests-after-green](skills/simplify-tests-after-green/SKILL.md) | Simplify a passing test suite while preserving its ability to detect faults. | Explicit only |
 
-Automatic skills can be selected by the agent when a task matches their description. Explicit-only skills require a direct request.
+Only `jujutsu` can be selected by the agent when a task matches its description; every other skill requires a direct request. Each skill declares this policy twice, and the validator requires them to agree: `policy.allow_implicit_invocation` in `agents/openai.yaml` for Codex, and `disable-model-invocation` in `SKILL.md` for Claude Code and other hosts that read only `SKILL.md`.
 
 ## Installation
 
@@ -42,15 +42,7 @@ A symlink uses the files in your checkout, so updates to that checkout also upda
 
 ### Claude Code
 
-Generate a Claude-compatible copy from the repository root:
-
-```sh
-python scripts/export_claude_skills.py /tmp/coding-skills-claude
-```
-
-The destination must be a new directory outside this repository. The exporter copies all ten skills and their resources, translating the Codex invocation policies into Claude frontmatter. It leaves the source files unchanged and does not install anything.
-
-Copy the desired exported skill directories into `~/.claude/skills/` for personal use or your project's `.claude/skills/` for project use. See the official [Claude Code skills documentation](https://code.claude.com/docs/en/skills). After source updates, regenerate the export into a fresh directory and replace your installed copies.
+Copy or symlink individual directories from `skills/` into `~/.claude/skills/` for personal use, or into your project's `.claude/skills/` for project use, as for Codex. See the official [Claude Code skills documentation](https://code.claude.com/docs/en/skills).
 
 ## Usage
 

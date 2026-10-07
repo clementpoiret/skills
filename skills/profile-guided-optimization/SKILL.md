@@ -1,6 +1,7 @@
 ---
 name: profile-guided-optimization
 description: "Optimize accepted-correct code using a representative workload, measured baseline, and identified bottleneck; not diagnosis of a known regression."
+disable-model-invocation: true
 ---
 
 # Profile-guided optimization

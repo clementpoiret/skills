@@ -1,6 +1,7 @@
 ---
 name: specification-grounded-testing
 description: "Create or strengthen tests or hidden verifiers from an independent specification; not merely running tests, fixing production code, or deleting redundant tests."
+disable-model-invocation: true
 ---
 
 # Specification-grounded testing

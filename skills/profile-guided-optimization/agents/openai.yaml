@@ -3,4 +3,4 @@ interface:
   short_description: "Keep only measured, behavior-preserving speedups"
   default_prompt: "Use $profile-guided-optimization to measure the bottleneck and keep only a verified, behavior-preserving improvement."
 policy:
-  allow_implicit_invocation: true
+  allow_implicit_invocation: false

@@ -1,6 +1,7 @@
 ---
 name: cross-agent
 description: "Explicitly requested independent Codex/Claude peer assessment, or a separately authorized bounded peer edit; never launch an external peer for an ordinary review request."
+disable-model-invocation: true
 ---
 
 # Cross-agent

@@ -1,6 +1,7 @@
 ---
 name: grounded-implementation
 description: "Implement a nontrivial feature, behavior change, or refactor from requirements in an existing codebase; not bug diagnosis, review-only, or test-only work."
+disable-model-invocation: true
 ---
 
 # Grounded implementation

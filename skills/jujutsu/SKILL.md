@@ -1,6 +1,7 @@
 ---
 name: jujutsu
 description: "Perform version-control work in a Jujutsu workspace when jj root succeeds, including status, diffs, commits, history, bookmarks, or remotes; not unrelated coding."
+disable-model-invocation: false
 ---
 
 # Jujutsu

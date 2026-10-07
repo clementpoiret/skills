@@ -1,6 +1,7 @@
 ---
 name: simplify-after-green
 description: "Explicitly requested behavior-preserving simplification of already-correct production code after a credible green baseline; not bug repair or test-suite reduction."
+disable-model-invocation: true
 ---
 
 # Simplify after green

@@ -353,7 +353,16 @@ def validate_skill(skill_dir: Path) -> list[Issue]:
 
     disable_raw = frontmatter.get("disable-model-invocation")
     disable_model = parse_bool(disable_raw) if disable_raw is not None else None
-    if disable_raw is not None and disable_model is None:
+    if disable_raw is None:
+        # Claude Code and OpenCode read only SKILL.md, not the Codex agents/openai.yaml policy.
+        issues.append(
+            Issue(
+                "missing-claude-policy",
+                skill_md,
+                "disable-model-invocation is required",
+            )
+        )
+    elif disable_model is None:
         issues.append(
             Issue(
                 "invalid-claude-policy",

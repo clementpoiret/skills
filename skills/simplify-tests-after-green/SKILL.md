@@ -1,6 +1,7 @@
 ---
 name: simplify-tests-after-green
 description: "Explicitly requested simplification of a green test suite, preserving distinct behavioral obligations, fault sensitivity, isolation, and useful diagnostics."
+disable-model-invocation: true
 ---
 
 # Simplify tests after green
